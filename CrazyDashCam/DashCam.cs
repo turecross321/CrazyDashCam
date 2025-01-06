@@ -100,8 +100,6 @@ public class DashCam : IDisposable
     public async void StartRecording()
     {
         _logger.LogInformation("Starting recording");
-        if (!string.IsNullOrEmpty(_configuration.Obd2BluetoothAddress))
-            await ConnectToRfCommBluetoothDevice(_configuration.Obd2BluetoothAddress);
         
         DateTime start = DateTime.Now;
         string folderName = start.ToString("yyyy-MM-dd_HH-mm-ss");
@@ -126,9 +124,15 @@ public class DashCam : IDisposable
         
         _eventAggregator = new TripEventAggregator();
         _eventAggregator.Subscribe(HandleEvent);
-        
-        _obdListener = new ObdListener(_logger, _eventAggregator, _configuration.ObdComPort);
-        _ = StartObdListenerAsync();
+
+        if (_configuration.UseObd)
+        {
+            if (_configuration.AutomaticallyConnectToObdBluetooth)
+                await ConnectToRfCommBluetoothDevice(_configuration.Obd2BluetoothAddress);
+            
+            _obdListener = new ObdListener(_logger, _eventAggregator, _configuration.ObdComPort);
+            _ = StartObdListenerAsync();
+        }
 
         _recording = true;
         _logger.LogInformation("Started recording");

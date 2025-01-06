@@ -1,6 +1,16 @@
 namespace CrazyDashCam.Database;
 
-public class DbIntakeTemperature(DateTime date, float value) : DbValueWithTimestamp<float>(date, value)
+public class DbIntakeTemperature : DbValueWithTimestamp<float>
 {
+    /// <summary>
+    /// For database migration
+    /// </summary>
+    public DbIntakeTemperature()
+    {
+        
+    }
     
+    public DbIntakeTemperature(DateTime date, float value) : base(date, value)
+    {
+    }
 }

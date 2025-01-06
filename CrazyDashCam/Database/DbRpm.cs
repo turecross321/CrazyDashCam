@@ -1,6 +1,16 @@
 namespace CrazyDashCam.Database;
 
-public class DbRpm(DateTime date, int value) : DbValueWithTimestamp<int>(date, value)
+public class DbRpm : DbValueWithTimestamp<int>
 {
+    /// <summary>
+    /// For database migration
+    /// </summary>
+    public DbRpm()
+    {
+        
+    }
     
+    public DbRpm(DateTime date, int value) : base(date, value)
+    {
+    }
 }

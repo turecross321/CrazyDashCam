@@ -3,8 +3,22 @@ using Microsoft.EntityFrameworkCore;
 
 namespace CrazyDashCam.Database;
 
-public class DbValueWithTimestamp<T>(DateTime date, T value)
+public class DbValueWithTimestamp<T>
 {
-    [Key] public DateTime Timestamp { get; set; } = date;
-    public T Value { get; set; } = value;
+    /// <summary>
+    /// For database migration
+    /// </summary>
+    protected DbValueWithTimestamp()
+    {
+        
+    }
+
+    protected DbValueWithTimestamp(DateTime date, T value)
+    {
+        Timestamp = date;
+        Value = value;
+    }
+
+    [Key] public DateTime Timestamp { get; set; }
+    public T Value { get; set; }
 }

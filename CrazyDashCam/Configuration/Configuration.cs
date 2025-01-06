@@ -8,7 +8,9 @@ public class Configuration
     public Camera[] Cameras { get; init; } = new Camera[] { new Camera("windshield", "/dev/video0", 30, "1500k") };
     public string VideoPath { get; init; } = Path.Combine(Environment.CurrentDirectory, "trips/");
     public string Obd2BluetoothAddress { get; init; } = "";
+    public bool AutomaticallyConnectToObdBluetooth { get; init; } = false;
     public string ObdComPort { get; init; } = "";
+    public bool UseObd { get; init; } = false;
     public string FileFormat { get; init; } = "mkv";
     public string VehicleName = "Car 2";
 

@@ -1,6 +1,16 @@
 namespace CrazyDashCam.Database;
 
-public class DbThrottlePosition(DateTime date, float value) : DbValueWithTimestamp<float>(date, value)
+public class DbThrottlePosition : DbValueWithTimestamp<float>
 {
+    /// <summary>
+    /// For database migration
+    /// </summary>
+    public DbThrottlePosition()
+    {
+        
+    }
     
+    public DbThrottlePosition(DateTime date, float value) : base(date, value)
+    {
+    }
 }

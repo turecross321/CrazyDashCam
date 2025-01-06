@@ -1,6 +1,16 @@
 namespace CrazyDashCam.Database;
 
-public class DbSpeed(DateTime date, int value) : DbValueWithTimestamp<int>(date, value)
+public class DbSpeed : DbValueWithTimestamp<int>
 {
+    /// <summary>
+    /// For database migration
+    /// </summary>
+    public DbSpeed()
+    {
+        
+    }
     
+    public DbSpeed(DateTime date, int value) : base(date, value)
+    {
+    }
 }

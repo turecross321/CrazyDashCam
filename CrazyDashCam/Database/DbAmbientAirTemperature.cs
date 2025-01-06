@@ -1,6 +1,16 @@
 namespace CrazyDashCam.Database;
 
-public class DbAmbientAirTemperature(DateTime date, float value) : DbValueWithTimestamp<float>(date, value)
+public class DbAmbientAirTemperature : DbValueWithTimestamp<float>
 {
+    /// <summary>
+    /// For database migration
+    /// </summary>
+    public DbAmbientAirTemperature()
+    {
+        
+    }
     
+    public DbAmbientAirTemperature(DateTime date, float value) : base(date, value)
+    {
+    }
 }
