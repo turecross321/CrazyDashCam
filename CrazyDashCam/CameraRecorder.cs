@@ -53,7 +53,7 @@ public class CameraRecorder(ILogger logger, Camera camera)
         
         if (_process == null)
         {
-            throw new InvalidOperationException("Failed to start the recording process.");
+            throw new InvalidOperationException($"Failed to start recording with {Camera}. Is FFmpeg installed and added to PATH?");
         }
         
         // all output is treated as errors for some reason
