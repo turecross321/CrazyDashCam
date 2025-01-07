@@ -25,6 +25,8 @@ public class CameraRecorder(ILogger logger, Camera camera)
                         $" -preset fast" + // todo: make preset changable?
                         $" -b:v {Camera.VideoBitrate}" +
                         $" -g 10" +
+                        $" -movflags +faststart" +
+                        $" -vf format=yuv420p" +
                         $" \"{output}\"",
             RedirectStandardOutput = true,
             RedirectStandardError = true,
