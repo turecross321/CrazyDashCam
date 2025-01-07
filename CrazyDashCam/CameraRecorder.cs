@@ -88,10 +88,14 @@ public class CameraRecorder(ILogger logger, Camera camera)
 
     private void ProcessOnErrorDataReceived(object sender, DataReceivedEventArgs e)
     {
-        logger.LogInformation("{data}", e.Data);
-
         if (e.Data?.Contains("error", StringComparison.InvariantCultureIgnoreCase) ?? false)
-            throw new Exception(e.Data);
+        {
+            logger.LogError("{data}", e.Data);
+        }
+        else
+        {
+            logger.LogTrace("{data}", e.Data);
+        }
     }
 
     public void Dispose()
