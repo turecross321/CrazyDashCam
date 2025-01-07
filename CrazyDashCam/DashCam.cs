@@ -103,7 +103,7 @@ public class DashCam : IDisposable
             StartTime = start,
             VehicleName = _configuration.VehicleName
         };
-        string metadataJson = JsonSerializer.Serialize(metadata);
+        string metadataJson = CrazyJsonSerializer.Serialize(metadata);
         await File.WriteAllTextAsync(Path.Combine(folderPath, "metadata.json"), metadataJson, cancellationToken);
         
         foreach (var recorder in _recorders)

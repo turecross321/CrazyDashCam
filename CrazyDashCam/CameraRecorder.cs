@@ -21,6 +21,7 @@ public class CameraRecorder(ILogger logger, Camera camera)
                         //$" -f dshow" + // todo: required for windows to work
                         $" -i {Camera.DeviceName}" +
                         $" -fps_mode vfr" + // Synchronizes video frames to maintain constant frame rate
+                        $" -video_size {Camera.ResolutionWidth}x{Camera.ResolutionHeight}" +
                         $" -copyinkf" +
                         $" -preset fast" + // todo: make preset changable?
                         $" -b:v {Camera.VideoBitrate}" +
