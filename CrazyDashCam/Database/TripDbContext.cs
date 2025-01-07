@@ -9,12 +9,13 @@ public class TripDbContext : DbContext
     public DbSet<DbEngineLoad> EngineLoads { get; set; }
     public DbSet<DbFuelLevel> FuelLevels { get; set; }
     public DbSet<DbIntakeTemperature> IntakeTemperatures { get; set; }
+    public DbSet<DbLocation> Locations { get; set; }
     public DbSet<DbOilTemperature> OilTemperatures { get; set; }
     public DbSet<DbRpm> Rpms { get; set; }
     public DbSet<DbSpeed> Speeds { get; set; }
     public DbSet<DbThrottlePosition> ThrottlePositions { get; set; }
     
-    public string DbPath { get; }
+    private string DbPath { get; }
 
     public TripDbContext(string folder)
     {
