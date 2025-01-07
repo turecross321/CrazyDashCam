@@ -97,19 +97,24 @@ public class DashCam : IDisposable
         
         _tripDbContext = new TripDbContext(folderPath);
         _tripDbContext.ApplyMigrations();
-
-        TripMetadata metadata = new TripMetadata
-        {
-            StartTime = start,
-            VehicleName = _configuration.VehicleName
-        };
-        string metadataJson = CrazyJsonSerializer.Serialize(metadata);
-        await File.WriteAllTextAsync(Path.Combine(folderPath, "metadata.json"), metadataJson, cancellationToken);
+        
+        List<TripMetadataVideo> videoMetadatas = new List<TripMetadataVideo>();
         
         foreach (var recorder in _recorders)
         {
-            recorder.StartRecording(cancellationToken, folderPath, $"{recorder.Camera.Label}.{_configuration.FileFormat}");
+            string fileName = $"{recorder.Camera.Label}.{_configuration.FileFormat}";
+            recorder.StartRecording(cancellationToken, folderPath, fileName);
+            videoMetadatas.Add(new TripMetadataVideo(recorder.Camera.Label, fileName));
         }
+        
+        TripMetadata metadata = new TripMetadata
+        {
+            StartTime = start,
+            VehicleName = _configuration.VehicleName,
+            Videos = videoMetadatas.ToArray(),
+        };
+        string metadataJson = CrazyJsonSerializer.Serialize(metadata);
+        await File.WriteAllTextAsync(Path.Combine(folderPath, "metadata.json"), metadataJson, cancellationToken);
         
         _eventAggregator = new TripEventAggregator();
         _eventAggregator.Subscribe(HandleEvent);
