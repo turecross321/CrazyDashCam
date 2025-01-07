@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Globalization;
+using CrazyDashCam.Configuration;
 using Microsoft.Extensions.Logging;
 
 namespace CrazyDashCam;
@@ -17,12 +18,13 @@ public class CameraRecorder(ILogger logger, Camera camera) : IDisposable
         var startInfo = new ProcessStartInfo
         {
             FileName = "ffmpeg",
-            Arguments = $" -framerate {Camera.fps}" + 
-                        $" -i {Camera.deviceName}" +
+            Arguments = $" -framerate {Camera.Fps}" + 
+                        //$" -f dshow" + // todo: required for windows to work
+                        $" -i {Camera.DeviceName}" +
                         $" -fps_mode vfr" + // Synchronizes video frames to maintain constant frame rate
                         $" -copyinkf" +
                         $" -preset fast" + // todo: make preset changable?
-                        $" -b:v {Camera.bitrate}" +
+                        $" -b:v {Camera.Bitrate}" +
                         $" -g 10" +
                         $" {path}",
             RedirectStandardOutput = true,

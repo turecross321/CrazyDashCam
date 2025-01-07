@@ -1,4 +1,5 @@
 using System.Text.Json;
+using CrazyDashCam.Configuration;
 using CrazyDashCam.Database;
 using InTheHand.Net;
 using InTheHand.Net.Bluetooth;
@@ -18,9 +19,9 @@ public class DashCam : IDisposable
     private bool _recording = false;
     
     private readonly ILogger _logger;
-    private readonly Configuration _configuration;
+    private readonly DashCamConfiguration _configuration;
 
-    public DashCam(ILogger logger, Configuration configuration)
+    public DashCam(ILogger logger, DashCamConfiguration configuration)
     {
         _logger = logger;
         _configuration = configuration;
@@ -99,43 +100,52 @@ public class DashCam : IDisposable
     
     public async void StartRecording()
     {
-        _logger.LogInformation("Starting recording");
+        try
+        {
+            _logger.LogInformation("Starting recording");
         
-        DateTime start = DateTime.Now;
-        string folderName = start.ToString("yyyy-MM-dd_HH-mm-ss");
-        string folderPath = Path.Combine(_configuration.VideoPath, folderName);
-        Directory.CreateDirectory(folderPath);
+            DateTime start = DateTime.Now;
+            string folderName = start.ToString("yyyy-MM-dd_HH-mm-ss");
+            string folderPath = Path.Combine(_configuration.VideoPath, folderName);
+            Directory.CreateDirectory(folderPath);
         
-        _tripDbContext = new TripDbContext(folderPath);
-        _tripDbContext.ApplyMigrations();
+            _tripDbContext = new TripDbContext(folderPath);
+            _tripDbContext.ApplyMigrations();
 
-        TripMetadata metadata = new TripMetadata
-        {
-            StartTime = start,
-            VehicleName = _configuration.VehicleName
-        };
-        string metadataJson = JsonSerializer.Serialize(metadata);
-        await File.WriteAllTextAsync(Path.Combine(folderPath, "metadata.json"), metadataJson);
+            TripMetadata metadata = new TripMetadata
+            {
+                StartTime = start,
+                VehicleName = _configuration.VehicleName
+            };
+            string metadataJson = JsonSerializer.Serialize(metadata);
+            await File.WriteAllTextAsync(Path.Combine(folderPath, "metadata.json"), metadataJson);
         
-        foreach (var recorder in _recorders)
-        {
-            recorder.StartRecording(folderPath, $"{recorder.Camera.label}.{_configuration.FileFormat}");
-        }
+            foreach (var recorder in _recorders)
+            {
+                recorder.StartRecording(folderPath, $"{recorder.Camera.Label}.{_configuration.FileFormat}");
+            }
         
-        _eventAggregator = new TripEventAggregator();
-        _eventAggregator.Subscribe(HandleEvent);
+            _eventAggregator = new TripEventAggregator();
+            _eventAggregator.Subscribe(HandleEvent);
 
-        if (_configuration.UseObd)
-        {
-            if (_configuration.AutomaticallyConnectToObdBluetooth)
-                await ConnectToRfCommBluetoothDevice(_configuration.Obd2BluetoothAddress);
+            if (_configuration.UseObd)
+            {
+                if (_configuration.AutomaticallyConnectToObdBluetooth)
+                    await ConnectToRfCommBluetoothDevice(_configuration.Obd2BluetoothAddress);
             
-            _obdListener = new ObdListener(_logger, _eventAggregator, _configuration.ObdComPort);
-            _ = StartObdListenerAsync();
-        }
+                _obdListener = new ObdListener(_logger, _eventAggregator, _configuration.ObdSerialPort);
+                _ = StartObdListenerAsync();
+            }
 
-        _recording = true;
-        _logger.LogInformation("Started recording");
+            _recording = true;
+            _logger.LogInformation("Started recording");
+        }
+        catch (Exception e)
+        {
+            StopRecording();
+            throw;
+        }
+        
     }
 
     public void StopRecording()

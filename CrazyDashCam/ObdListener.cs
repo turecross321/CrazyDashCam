@@ -13,18 +13,24 @@ public class ObdListener : IDisposable
     private readonly ELM327 _dev;
     private readonly TripEventAggregator _eventAggregator;
     private readonly ILogger _logger;
-    
+
     private Timer? _timer;
     private bool _isListening;
 
-    public ObdListener(ILogger logger, TripEventAggregator eventAggregator, string comPort)
+    public ObdListener(ILogger logger, TripEventAggregator eventAggregator, string obdPort)
     {
         _logger = logger;
         _eventAggregator = eventAggregator;
-        
-        _connection = new SerialConnection(comPort);
+
+        if (string.IsNullOrEmpty(obdPort))
+        {
+            logger.LogInformation("OBD port hasn't been specified.");
+            obdPort = GetObdPort();
+        }
+
+        _connection = new SerialConnection(obdPort);
         _dev = new ELM327(_connection, new OBDConsoleLogger(OBDLogLevel.Debug));
-        
+
         _dev.SubscribeDataReceived<AmbientAirTemperature>(ObdEventHandler);
         _dev.SubscribeDataReceived<EngineCoolantTemperature>(ObdEventHandler);
         _dev.SubscribeDataReceived<CalculatedEngineLoad>(ObdEventHandler);
@@ -34,8 +40,35 @@ public class ObdListener : IDisposable
         _dev.SubscribeDataReceived<EngineRPM>(ObdEventHandler);
         _dev.SubscribeDataReceived<VehicleSpeed>(ObdEventHandler);
         _dev.SubscribeDataReceived<ThrottlePosition>(ObdEventHandler);
-        
+
         _dev.Initialize();
+    }
+
+    private string GetObdPort()
+    {
+        _logger.LogInformation("Attempting to find OBD port");
+        
+        IEnumerable<string> availablePorts = SerialConnection.GetAvailablePorts();
+
+        string result = "";
+        
+        foreach (string port in availablePorts)
+        {
+            try
+            {
+                SerialConnection con = new SerialConnection(port);
+                con.Connect();
+                result = port;
+            }
+            catch (Exception e)
+            {
+                continue;
+            }
+        }
+
+        _logger.LogInformation("Found {result}", result);
+        
+        return result;
     }
 
     public async Task StartListeningAsync()
@@ -67,9 +100,9 @@ public class ObdListener : IDisposable
     {
         while (_isListening)
         {
+            await Task.Delay(interval); // Delay between requests for this specific data type
             // Request data
             _dev.RequestData<T>();
-            await Task.Delay(interval); // Delay between requests for this specific data type
         }
     }
     

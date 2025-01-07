@@ -1,3 +1,3 @@
-namespace CrazyDashCam;
+namespace CrazyDashCam.Configuration;
 
-public record Camera(string label, string deviceName, int fps,  string bitrate);
+public record Camera(string Label, string DeviceName, int Fps,  string Bitrate);

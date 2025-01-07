@@ -1,4 +1,5 @@
 ﻿using CrazyDashCam;
+using CrazyDashCam.Configuration;
 using Microsoft.Extensions.Logging;
 
 using var loggerFactory = LoggerFactory.Create(builder =>
@@ -7,12 +8,12 @@ using var loggerFactory = LoggerFactory.Create(builder =>
 });
 ILogger logger = loggerFactory.CreateLogger<Program>();
 
-Configuration config = Configuration.LoadOrCreate(logger);
+DashCamConfiguration config = DashCamConfiguration.LoadOrCreate(logger);
 DashCam cam = new DashCam(logger, config);
 
 cam.StartRecording();
 
-Thread.Sleep(10_000);
+Thread.Sleep(30_000);
 
 AppDomain.CurrentDomain.ProcessExit += (sender, eventArgs) =>
 {
