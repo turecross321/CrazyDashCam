@@ -21,4 +21,10 @@
       <PackageReference Include="OBD.NET" Version="1.3.0" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Reference Include="Xabe.FFmpeg">
+        <HintPath>..\..\..\.nuget\packages\xabe.ffmpeg\5.2.6\lib\netstandard2.0\Xabe.FFmpeg.dll</HintPath>
+      </Reference>
+    </ItemGroup>
+
 </Project>

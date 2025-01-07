@@ -14,9 +14,6 @@ public class ObdListener : IDisposable
     private readonly TripEventAggregator _eventAggregator;
     private readonly ILogger _logger;
 
-    private Timer? _timer;
-    private bool _isListening;
-
     public ObdListener(ILogger logger, TripEventAggregator eventAggregator, string obdPort)
     {
         _logger = logger;
@@ -71,38 +68,40 @@ public class ObdListener : IDisposable
         return result;
     }
 
-    public async Task StartListeningAsync()
+    public void StartListening(CancellationToken cancellationToken)
     {
-        if (_isListening)
-            return;
-
+        StartListeningAsync(cancellationToken).GetAwaiter().GetResult();
+    }
+    
+    private async Task StartListeningAsync(CancellationToken cancellationToken)
+    {
         _logger.LogInformation("Starting OBD listener...");
 
-        _isListening = true;
-
         Task[] tasks =
-        {
-            PeriodicRequest<AmbientAirTemperature>(TimeSpan.FromSeconds(10)),
-            PeriodicRequest<EngineCoolantTemperature>(TimeSpan.FromSeconds(10)),
-            PeriodicRequest<CalculatedEngineLoad>(TimeSpan.FromSeconds(5)),
-            PeriodicRequest<FuelTankLevelInput>(TimeSpan.FromSeconds(60)),
-            PeriodicRequest<IntakeAirTemperature>(TimeSpan.FromSeconds(10)),
-            PeriodicRequest<EngineOilTemperature>(TimeSpan.FromSeconds(10)),
-            PeriodicRequest<EngineRPM>(TimeSpan.FromSeconds(1)),
-            PeriodicRequest<VehicleSpeed>(TimeSpan.FromSeconds(1)),
-            PeriodicRequest<ThrottlePosition>(TimeSpan.FromSeconds(1))
-        };
+        [
+            PeriodicRequest<AmbientAirTemperature>(TimeSpan.FromSeconds(10), cancellationToken),
+            PeriodicRequest<EngineCoolantTemperature>(TimeSpan.FromSeconds(10), cancellationToken),
+            PeriodicRequest<CalculatedEngineLoad>(TimeSpan.FromSeconds(5), cancellationToken),
+            PeriodicRequest<FuelTankLevelInput>(TimeSpan.FromSeconds(60), cancellationToken),
+            PeriodicRequest<IntakeAirTemperature>(TimeSpan.FromSeconds(10), cancellationToken),
+            PeriodicRequest<EngineOilTemperature>(TimeSpan.FromSeconds(10), cancellationToken),
+            PeriodicRequest<EngineRPM>(TimeSpan.FromSeconds(1), cancellationToken),
+            PeriodicRequest<VehicleSpeed>(TimeSpan.FromSeconds(1), cancellationToken),
+            PeriodicRequest<ThrottlePosition>(TimeSpan.FromSeconds(1), cancellationToken)
+        ];
         
         await Task.WhenAll(tasks);
     }
 
-    private async Task PeriodicRequest<T>(TimeSpan interval) where T : class, IOBDData, new()
+    private async Task PeriodicRequest<T>(TimeSpan interval, CancellationToken cancellationToken) where T : class, IOBDData, new()
     {
-        while (_isListening)
+        await Task.Delay(interval, cancellationToken); // Initial delay to avoid all periodic requests happening at the same time
+        
+        while (cancellationToken.IsCancellationRequested == false)
         {
-            await Task.Delay(interval); // Delay between requests for this specific data type
             // Request data
             _dev.RequestData<T>();
+            await Task.Delay(interval, cancellationToken); // Delay between requests for this specific data type
         }
     }
     
@@ -113,8 +112,6 @@ public class ObdListener : IDisposable
 
     public void Dispose()
     {
-        _isListening = false;
-        _timer?.Dispose();
         _dev.Dispose();
         _connection.Dispose();
     }

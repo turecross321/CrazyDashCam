@@ -1,19 +1,18 @@
 using System.Diagnostics;
-using System.Globalization;
 using CrazyDashCam.Configuration;
 using Microsoft.Extensions.Logging;
 
 namespace CrazyDashCam;
 
-public class CameraRecorder(ILogger logger, Camera camera) : IDisposable
+public class CameraRecorder(ILogger logger, Camera camera)
 {
-    public Camera Camera { get; private set; } = camera;
+    public Camera Camera { get; } = camera;
     private Process? _process = null;
 
-    public void StartRecording(string directory, string fileName)
+    public void StartRecording(CancellationToken cancellationToken, string directory, string fileName)
     {
-        string path = Path.Combine(directory, fileName);
-        logger.LogInformation("Starting recording for {device} at {output}", Camera, path);
+        string output = Path.Combine(directory, fileName);
+        logger.LogInformation("Starting recording for {device} at {output}", Camera, output);
 
         var startInfo = new ProcessStartInfo
         {
@@ -24,9 +23,9 @@ public class CameraRecorder(ILogger logger, Camera camera) : IDisposable
                         $" -fps_mode vfr" + // Synchronizes video frames to maintain constant frame rate
                         $" -copyinkf" +
                         $" -preset fast" + // todo: make preset changable?
-                        $" -b:v {Camera.Bitrate}" +
+                        $" -b:v {Camera.VideoBitrate}" +
                         $" -g 10" +
-                        $" {path}",
+                        $" \"{output}\"",
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             RedirectStandardInput = true,
@@ -46,9 +45,11 @@ public class CameraRecorder(ILogger logger, Camera camera) : IDisposable
         
         _process.BeginOutputReadLine();
         _process.BeginErrorReadLine();
+        
+        cancellationToken.Register(StopRecording);
     }
 
-    public void StopRecording()
+    private void StopRecording()
     {
         if (_process == null || _process.HasExited)
         {
@@ -60,10 +61,10 @@ public class CameraRecorder(ILogger logger, Camera camera) : IDisposable
         {
             logger.LogInformation("Stopping recording for {device}", Camera);
 
-            // Send a graceful termination signal (Ctrl+C equivalent on Unix/Windows)
+            // Send a graceful termination signal
             _process.StandardInput.WriteLine("q");
             _process.StandardInput.Flush();
-
+            
             // Wait for the process to exit
             _process.WaitForExit(5000); // Wait up to 5 seconds for clean termination
 
@@ -87,7 +88,7 @@ public class CameraRecorder(ILogger logger, Camera camera) : IDisposable
 
     private void ProcessOnErrorDataReceived(object sender, DataReceivedEventArgs e)
     {
-        logger.LogDebug("{data}", e.Data);
+        logger.LogInformation("{data}", e.Data);
 
         if (e.Data?.Contains("error", StringComparison.InvariantCultureIgnoreCase) ?? false)
             throw new Exception(e.Data);
@@ -96,6 +97,5 @@ public class CameraRecorder(ILogger logger, Camera camera) : IDisposable
     public void Dispose()
     {
         StopRecording();
-        _process?.Dispose();
     }
 }

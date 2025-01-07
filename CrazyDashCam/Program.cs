@@ -8,15 +8,11 @@ using var loggerFactory = LoggerFactory.Create(builder =>
 });
 ILogger logger = loggerFactory.CreateLogger<Program>();
 
+CancellationTokenSource cts = new CancellationTokenSource();
+
 DashCamConfiguration config = DashCamConfiguration.LoadOrCreate(logger);
 DashCam cam = new DashCam(logger, config);
+cam.StartRecording(cts.Token);
 
-cam.StartRecording();
-
-Thread.Sleep(30_000);
-
-AppDomain.CurrentDomain.ProcessExit += (sender, eventArgs) =>
-{
-    cam.StopRecording();
-    // Add cleanup or other logic here
-};
+await Task.Delay(10_000);
+cts.Cancel();

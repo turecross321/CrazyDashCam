@@ -17,7 +17,7 @@ public class DashCam : IDisposable
     private TripEventAggregator? _eventAggregator;
     private ObdListener? _obdListener;
     private bool _recording = false;
-    
+
     private readonly ILogger _logger;
     private readonly DashCamConfiguration _configuration;
 
@@ -86,80 +86,56 @@ public class DashCam : IDisposable
         }
     }
     
-    private async Task StartObdListenerAsync()
+    public async void StartRecording(CancellationToken cancellationToken)
     {
-        try
-        {
-            await _obdListener!.StartListeningAsync();
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error occurred while listening to OBD data.");
-        }
-    }
-    
-    public async void StartRecording()
-    {
-        try
-        {
-            _logger.LogInformation("Starting recording");
+        _logger.LogInformation("Starting recording");
         
-            DateTime start = DateTime.Now;
-            string folderName = start.ToString("yyyy-MM-dd_HH-mm-ss");
-            string folderPath = Path.Combine(_configuration.VideoPath, folderName);
-            Directory.CreateDirectory(folderPath);
+        DateTime start = DateTime.Now;
+        string folderName = start.ToString("yyyy-MM-dd_HH-mm-ss");
+        string folderPath = Path.Combine(_configuration.VideoPath, folderName);
+        Directory.CreateDirectory(folderPath);
         
-            _tripDbContext = new TripDbContext(folderPath);
-            _tripDbContext.ApplyMigrations();
+        _tripDbContext = new TripDbContext(folderPath);
+        _tripDbContext.ApplyMigrations();
 
-            TripMetadata metadata = new TripMetadata
-            {
-                StartTime = start,
-                VehicleName = _configuration.VehicleName
-            };
-            string metadataJson = JsonSerializer.Serialize(metadata);
-            await File.WriteAllTextAsync(Path.Combine(folderPath, "metadata.json"), metadataJson);
+        TripMetadata metadata = new TripMetadata
+        {
+            StartTime = start,
+            VehicleName = _configuration.VehicleName
+        };
+        string metadataJson = JsonSerializer.Serialize(metadata);
+        await File.WriteAllTextAsync(Path.Combine(folderPath, "metadata.json"), metadataJson, cancellationToken);
         
-            foreach (var recorder in _recorders)
-            {
-                recorder.StartRecording(folderPath, $"{recorder.Camera.Label}.{_configuration.FileFormat}");
-            }
+        foreach (var recorder in _recorders)
+        {
+            recorder.StartRecording(cancellationToken, folderPath, $"{recorder.Camera.Label}.{_configuration.FileFormat}");
+        }
         
-            _eventAggregator = new TripEventAggregator();
-            _eventAggregator.Subscribe(HandleEvent);
+        _eventAggregator = new TripEventAggregator();
+        _eventAggregator.Subscribe(HandleEvent);
 
-            if (_configuration.UseObd)
-            {
-                if (_configuration.AutomaticallyConnectToObdBluetooth)
-                    await ConnectToRfCommBluetoothDevice(_configuration.Obd2BluetoothAddress);
+        if (_configuration.UseObd)
+        {
+            if (_configuration.AutomaticallyConnectToObdBluetooth)
+                await ConnectToRfCommBluetoothDevice(_configuration.Obd2BluetoothAddress);
             
-                _obdListener = new ObdListener(_logger, _eventAggregator, _configuration.ObdSerialPort);
-                _ = StartObdListenerAsync();
-            }
+            _obdListener = new ObdListener(_logger, _eventAggregator, _configuration.ObdSerialPort);
+            _obdListener.StartListening(cancellationToken);
+        }
 
-            _recording = true;
-            _logger.LogInformation("Started recording");
-        }
-        catch (Exception e)
-        {
-            StopRecording();
-            throw;
-        }
+        _recording = true;
+        _logger.LogInformation("Started recording");
         
+        cancellationToken.Register(StopRecording);
     }
 
-    public void StopRecording()
+    private void StopRecording()
     {
         _logger.LogInformation("Stopping recording");
         
         _obdListener?.Dispose();
-        
-        foreach (var recorder in _recorders)
-        {
-            recorder.StopRecording();
-        }
-        
         _eventAggregator?.Dispose();
+        
         _tripDbContext?.SaveChanges();
         _tripDbContext?.Dispose();
         
@@ -173,6 +149,4 @@ public class DashCam : IDisposable
         _tripDbContext?.Dispose();
         _eventAggregator?.Dispose();
     }
-    
-    // todo: save database periodically
 }

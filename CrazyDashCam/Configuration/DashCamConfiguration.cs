@@ -5,7 +5,7 @@ namespace CrazyDashCam.Configuration;
 
 public class DashCamConfiguration
 {
-    public Camera[] Cameras { get; init; } = new Camera[] { new Camera("windshield", "/dev/video0", 30, "1500k") };
+    public Camera[] Cameras { get; init; } = new Camera[] { new Camera("windshield", "/dev/video0", 30, 1_500_000) };
     public string VideoPath { get; init; } = Path.Combine(Environment.CurrentDirectory, "trips/");
     public string Obd2BluetoothAddress { get; init; } = "";
     public bool AutomaticallyConnectToObdBluetooth { get; init; } = false;
