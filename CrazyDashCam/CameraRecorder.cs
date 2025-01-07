@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using CrazyDashCam.Configuration;
 using Microsoft.Extensions.Logging;
 
@@ -9,6 +10,18 @@ public class CameraRecorder(ILogger logger, Camera camera)
     public Camera Camera { get; } = camera;
     private Process? _process = null;
 
+    private string GetSupportedFormat()
+    {
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            return "v4l2";
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            return "dshow";
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            return "avfoundation";
+        
+        throw new Exception("Unsupported OS");
+    }
+
     public void StartRecording(CancellationToken cancellationToken, string directory, string fileName)
     {
         string output = Path.Combine(directory, fileName);
@@ -18,7 +31,7 @@ public class CameraRecorder(ILogger logger, Camera camera)
         {
             FileName = "ffmpeg",
             Arguments = $" -framerate {Camera.Fps}" + 
-                        //$" -f dshow" + // todo: required for windows to work
+                        $" -f {GetSupportedFormat()}" +
                         $" -i {Camera.DeviceName}" +
                         $" -fps_mode vfr" + // Synchronizes video frames to maintain constant frame rate
                         $" -video_size {Camera.ResolutionWidth}x{Camera.ResolutionHeight}" +
