@@ -1,6 +1,8 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CrazyDashCam", "CrazyDashCam\CrazyDashCam.csproj", "{B7B1C03F-F7D9-4230-9A96-070A68B9CACA}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CrazyDashCam.Shared", "CrazyDashCam.Shared\CrazyDashCam.Shared.csproj", "{FBC6C314-BA15-4FD5-B395-097108912D9A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CrazyDashCam.Recorder", "CrazyDashCam.Recorder\CrazyDashCam.Recorder.csproj", "{E65865EB-876B-4D76-A2B9-E67D479C0C62}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -8,9 +10,13 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{B7B1C03F-F7D9-4230-9A96-070A68B9CACA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{B7B1C03F-F7D9-4230-9A96-070A68B9CACA}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{B7B1C03F-F7D9-4230-9A96-070A68B9CACA}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{B7B1C03F-F7D9-4230-9A96-070A68B9CACA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FBC6C314-BA15-4FD5-B395-097108912D9A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FBC6C314-BA15-4FD5-B395-097108912D9A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FBC6C314-BA15-4FD5-B395-097108912D9A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FBC6C314-BA15-4FD5-B395-097108912D9A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E65865EB-876B-4D76-A2B9-E67D479C0C62}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E65865EB-876B-4D76-A2B9-E67D479C0C62}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E65865EB-876B-4D76-A2B9-E67D479C0C62}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E65865EB-876B-4D76-A2B9-E67D479C0C62}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
