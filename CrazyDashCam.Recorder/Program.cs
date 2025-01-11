@@ -15,5 +15,5 @@ DashCamConfiguration config = DashCamConfiguration.LoadOrCreate(logger);
 DashCam cam = new DashCam(logger, config);
 cam.StartRecording(cts.Token);
 
-await Task.Delay(10_000);
+await Task.Delay(20_000);
 cts.Cancel();

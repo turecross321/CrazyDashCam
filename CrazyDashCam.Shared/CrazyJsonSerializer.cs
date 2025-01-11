@@ -14,6 +14,14 @@ public static class CrazyJsonSerializer
     {
         return JsonSerializer.Serialize(obj, obj.GetType(), Options);
     }
+    
+    public static string SerializeCompact(object obj)
+    {
+        JsonSerializerOptions options = Options;
+        options.WriteIndented = false;
+        
+        return JsonSerializer.Serialize(obj, obj.GetType(), options);
+    }
 
     public static T? Deserialize<T>(string json)
     {

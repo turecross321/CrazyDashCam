@@ -4,6 +4,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CrazyDashCam.Shared", "Craz
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CrazyDashCam.Recorder", "CrazyDashCam.Recorder\CrazyDashCam.Recorder.csproj", "{E65865EB-876B-4D76-A2B9-E67D479C0C62}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CrazyDashCam.Player.Api", "CrazyDashCam.Player.Api\CrazyDashCam.Player.Api.csproj", "{0F63AC18-F3AB-4370-BB7D-32C3CFA36316}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -18,5 +20,9 @@ Global
 		{E65865EB-876B-4D76-A2B9-E67D479C0C62}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E65865EB-876B-4D76-A2B9-E67D479C0C62}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E65865EB-876B-4D76-A2B9-E67D479C0C62}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0F63AC18-F3AB-4370-BB7D-32C3CFA36316}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0F63AC18-F3AB-4370-BB7D-32C3CFA36316}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0F63AC18-F3AB-4370-BB7D-32C3CFA36316}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0F63AC18-F3AB-4370-BB7D-32C3CFA36316}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

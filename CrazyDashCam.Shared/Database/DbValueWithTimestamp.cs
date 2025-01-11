@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace CrazyDashCam.Shared.Database;
 
-public class DbValueWithTimestamp<T>
+public class DbValueWithTimestamp<T> : IHasTimestamp
 {
     /// <summary>
     /// For database migration

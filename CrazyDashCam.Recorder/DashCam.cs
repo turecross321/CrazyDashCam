@@ -112,20 +112,20 @@ public class DashCam : IDisposable
         _tripDbContext = new TripDbContext(_tripDirectory);
         _tripDbContext.ApplyMigrations();
         
-        List<TripMetadataVideo> videoMetadatas = new List<TripMetadataVideo>();
+        List<TripMetadataVideo> metadataVideos = new List<TripMetadataVideo>();
         
         foreach (var recorder in _recorders)
         {
             string fileName = $"{recorder.Camera.Label}.{_configuration.FileFormat}";
-            recorder.StartRecording(cancellationToken, _tripDirectory, fileName);
-            videoMetadatas.Add(new TripMetadataVideo(recorder.Camera.Label, fileName));
+            DateTime date = recorder.StartRecording(cancellationToken, _tripDirectory, fileName);
+            metadataVideos.Add(new TripMetadataVideo(recorder.Camera.Label, fileName, date));
         }
         
         _tripMetadata = new TripMetadata
         {
             StartDate = start,
             VehicleName = _configuration.VehicleName,
-            Videos = videoMetadatas.ToArray(),
+            Videos = metadataVideos.ToArray(),
         };
         
         SaveMetadata();

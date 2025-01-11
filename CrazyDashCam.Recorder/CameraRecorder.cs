@@ -22,7 +22,7 @@ public class CameraRecorder(ILogger logger, Camera camera)
         throw new Exception("Unsupported OS");
     }
 
-    public void StartRecording(CancellationToken cancellationToken, string directory, string fileName)
+    public DateTime StartRecording(CancellationToken cancellationToken, string directory, string fileName)
     {
         string output = Path.Combine(directory, fileName);
         logger.LogInformation("Starting recording for {device} at {output}", Camera, output);
@@ -63,6 +63,8 @@ public class CameraRecorder(ILogger logger, Camera camera)
         _process.BeginErrorReadLine();
         
         cancellationToken.Register(StopRecording);
+        return DateTime.Now;
+        // todo: improve date start system
     }
 
     private void StopRecording()
