@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Text.Json;
 using CrazyDashCam.Configuration;
 using CrazyDashCam.Database;
@@ -17,6 +18,9 @@ public class DashCam : IDisposable
     private TripEventAggregator? _eventAggregator;
     private ObdListener? _obdListener;
     private bool _recording = false;
+    
+    private TripMetadata? _tripMetadata;
+    private string? _tripDirectory;
 
     private readonly ILogger _logger;
     private readonly DashCamConfiguration _configuration;
@@ -85,6 +89,16 @@ public class DashCam : IDisposable
                 break;
         }
     }
+
+    private void SaveMetadata()
+    {
+        _logger.LogInformation("Saving metadata");
+
+        Debug.Assert(_tripMetadata != null, nameof(_tripMetadata) + " != null");
+        string metadataJson = CrazyJsonSerializer.Serialize(_tripMetadata);
+        Debug.Assert(_tripDirectory != null, nameof(_tripDirectory) + " != null");
+        File.WriteAllTextAsync(Path.Combine(_tripDirectory, "metadata.json"), metadataJson);
+    }
     
     public async void StartRecording(CancellationToken cancellationToken)
     {
@@ -92,10 +106,10 @@ public class DashCam : IDisposable
         
         DateTime start = DateTime.Now;
         string folderName = start.ToString("yyyy-MM-dd_HH-mm-ss");
-        string folderPath = Path.Combine(_configuration.VideoPath, folderName);
-        Directory.CreateDirectory(folderPath);
+        _tripDirectory = Path.Combine(_configuration.VideoPath, folderName);
+        Directory.CreateDirectory(_tripDirectory);
         
-        _tripDbContext = new TripDbContext(folderPath);
+        _tripDbContext = new TripDbContext(_tripDirectory);
         _tripDbContext.ApplyMigrations();
         
         List<TripMetadataVideo> videoMetadatas = new List<TripMetadataVideo>();
@@ -103,18 +117,18 @@ public class DashCam : IDisposable
         foreach (var recorder in _recorders)
         {
             string fileName = $"{recorder.Camera.Label}.{_configuration.FileFormat}";
-            recorder.StartRecording(cancellationToken, folderPath, fileName);
+            recorder.StartRecording(cancellationToken, _tripDirectory, fileName);
             videoMetadatas.Add(new TripMetadataVideo(recorder.Camera.Label, fileName));
         }
         
-        TripMetadata metadata = new TripMetadata
+        _tripMetadata = new TripMetadata
         {
-            StartTime = start,
+            StartDate = start,
             VehicleName = _configuration.VehicleName,
             Videos = videoMetadatas.ToArray(),
         };
-        string metadataJson = CrazyJsonSerializer.Serialize(metadata);
-        await File.WriteAllTextAsync(Path.Combine(folderPath, "metadata.json"), metadataJson, cancellationToken);
+        
+        SaveMetadata();
         
         _eventAggregator = new TripEventAggregator();
         _eventAggregator.Subscribe(HandleEvent);
@@ -138,6 +152,11 @@ public class DashCam : IDisposable
     {
         _logger.LogInformation("Stopping recording");
         
+        DateTime end = DateTime.Now;
+        Debug.Assert(_tripMetadata != null, nameof(_tripMetadata) + " != null");
+        _tripMetadata.EndDate = end;
+        SaveMetadata();
+        
         _obdListener?.Dispose();
         _eventAggregator?.Dispose();
         
@@ -145,6 +164,9 @@ public class DashCam : IDisposable
         _tripDbContext?.Dispose();
         
         _recording = false;
+        _tripMetadata = null;
+        _tripDirectory = null;
+        
         _logger.LogInformation("Stopped recording");
     }
 
