@@ -31,6 +31,7 @@ public class ObdListener : IDisposable
         _dev.SubscribeDataReceived<AmbientAirTemperature>(ObdEventHandler);
         _dev.SubscribeDataReceived<EngineCoolantTemperature>(ObdEventHandler);
         _dev.SubscribeDataReceived<CalculatedEngineLoad>(ObdEventHandler);
+        _dev.SubscribeDataReceived<AbsoluteLoadValue>(ObdEventHandler);
         _dev.SubscribeDataReceived<FuelTankLevelInput>(ObdEventHandler);
         _dev.SubscribeDataReceived<IntakeAirTemperature>(ObdEventHandler);
         _dev.SubscribeDataReceived<EngineOilTemperature>(ObdEventHandler);
@@ -75,6 +76,7 @@ public class ObdListener : IDisposable
         _ = PeriodicRequest<AmbientAirTemperature>(TimeSpan.FromSeconds(10), cancellationToken);
         _ = PeriodicRequest<EngineCoolantTemperature>(TimeSpan.FromSeconds(10), cancellationToken);
         _ = PeriodicRequest<CalculatedEngineLoad>(TimeSpan.FromSeconds(5), cancellationToken);
+        _ = PeriodicRequest<AbsoluteLoadValue>(TimeSpan.FromSeconds(5), cancellationToken);
         _ = PeriodicRequest<FuelTankLevelInput>(TimeSpan.FromSeconds(60), cancellationToken);
         _ = PeriodicRequest<IntakeAirTemperature>(TimeSpan.FromSeconds(10), cancellationToken);
         _ = PeriodicRequest<EngineOilTemperature>(TimeSpan.FromSeconds(10), cancellationToken);

@@ -6,7 +6,8 @@ public record TripEventsResponse
 {
     public required IEnumerable<DbAmbientAirTemperature> AmbAirTemp { get; set; }
     public required IEnumerable<DbCoolantTemperature> CoolTemp { get; set; }
-    public required IEnumerable<DbEngineLoad> EngLoad { get; set; }
+    public required IEnumerable<DbCalculatedEngineLoad> CalcLoad { get; set; }
+    public required IEnumerable<DbAbsoluteLoad> AbsLoad { get; set; }
     public required IEnumerable<DbFuelLevel> FuelLvl { get; set; }
     public required IEnumerable<DbIntakeTemperature> InTemp { get; set; }
     public required IEnumerable<DbLocation> Loc { get; set; }

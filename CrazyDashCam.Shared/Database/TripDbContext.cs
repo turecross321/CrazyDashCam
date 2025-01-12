@@ -6,7 +6,8 @@ public class TripDbContext : DbContext
 {
     public DbSet<DbAmbientAirTemperature> AmbientAirTemperatures { get; set; }
     public DbSet<DbCoolantTemperature> CoolantTemperatures { get; set; }
-    public DbSet<DbEngineLoad> EngineLoads { get; set; }
+    public DbSet<DbCalculatedEngineLoad> CalculatedEngineLoads { get; set; }
+    public DbSet<DbAbsoluteLoad> AbsoluteLoads { get; set; }
     public DbSet<DbFuelLevel> FuelLevels { get; set; }
     public DbSet<DbIntakeTemperature> IntakeTemperatures { get; set; }
     public DbSet<DbLocation> Locations { get; set; }

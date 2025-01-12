@@ -67,7 +67,10 @@ public class DashCam : IDisposable
                 _tripDbContext.CoolantTemperatures.Add(new DbCoolantTemperature(date, engineCoolantTemperature.Temperature));
                 break;
             case CalculatedEngineLoad calculatedEngineLoad:
-                _tripDbContext.EngineLoads.Add(new DbEngineLoad(date, calculatedEngineLoad.Load));
+                _tripDbContext.CalculatedEngineLoads.Add(new DbCalculatedEngineLoad(date, calculatedEngineLoad.Load));
+                break;
+            case AbsoluteLoadValue absoluteLoad:
+                _tripDbContext.AbsoluteLoads.Add(new DbAbsoluteLoad(date, absoluteLoad.Load));
                 break;
             case FuelTankLevelInput fuelTankLevelInput:
                 _tripDbContext.FuelLevels.Add(new DbFuelLevel(date, fuelTankLevelInput.Level));

@@ -120,8 +120,9 @@ public class TripController(TripStorageService tripStorage) : ControllerBase
                     clientRequest.To),
                 CoolTemp = tripDb.CoolantTemperatures.FilterByTimestamp(clientRequest.From,
                     clientRequest.To),
-                EngLoad = tripDb.EngineLoads.FilterByTimestamp(clientRequest.From,
+                CalcLoad = tripDb.CalculatedEngineLoads.FilterByTimestamp(clientRequest.From,
                     clientRequest.To),
+                AbsLoad = tripDb.AbsoluteLoads.FilterByTimestamp(clientRequest.From, clientRequest.To),
                 FuelLvl = tripDb.FuelLevels.FilterByTimestamp(clientRequest.From,
                     clientRequest.To),
                 InTemp = tripDb.IntakeTemperatures.FilterByTimestamp(clientRequest.From,
@@ -137,7 +138,7 @@ public class TripController(TripStorageService tripStorage) : ControllerBase
                 ThrPos = tripDb.ThrottlePositions.FilterByTimestamp(clientRequest.From,
                     clientRequest.To),
                 From = clientRequest.From,
-                To = clientRequest.To
+                To = clientRequest.To,
             };
             
             // todo: do *some* security measure to make sure this isnt completely abused
