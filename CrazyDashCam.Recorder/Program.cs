@@ -16,6 +16,6 @@ DashCam cam = new DashCam(logger, config);
 cam.StartRecording(cts.Token);
 
 Console.WriteLine("Press key to stop recording");
-Console.ReadLine();
+Console.ReadKey();
 
 cts.Cancel();
