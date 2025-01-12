@@ -15,6 +15,7 @@ public record TripEventsResponse
     public required IEnumerable<DbRpm> Rpm { get; set; }
     public required IEnumerable<DbSpeed> Speed { get; set; }
     public required IEnumerable<DbThrottlePosition> ThrPos { get; set; }
+    public required IEnumerable<DbRelativeThrottlePosition> RelThrPos { get; set; }
     public required DateTimeOffset From { get; set; }
     public required DateTimeOffset To { get; set; }
 }

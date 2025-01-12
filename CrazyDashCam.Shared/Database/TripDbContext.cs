@@ -15,6 +15,7 @@ public class TripDbContext : DbContext
     public DbSet<DbRpm> Rpms { get; set; }
     public DbSet<DbSpeed> Speeds { get; set; }
     public DbSet<DbThrottlePosition> ThrottlePositions { get; set; }
+    public DbSet<DbRelativeThrottlePosition> RelativeThrottlePositions { get; set; }
     
     private string DbPath { get; }
 

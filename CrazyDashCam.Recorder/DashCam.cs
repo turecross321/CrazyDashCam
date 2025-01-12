@@ -90,6 +90,9 @@ public class DashCam : IDisposable
             case ThrottlePosition throttlePosition:
                 _tripDbContext.ThrottlePositions.Add(new DbThrottlePosition(date, throttlePosition.Position));
                 break;
+            case RelativeThrottlePosition relativeThrottlePosition:
+                _tripDbContext.RelativeThrottlePositions.Add(new DbRelativeThrottlePosition(date, relativeThrottlePosition.Position));
+                break;
         }
     }
 

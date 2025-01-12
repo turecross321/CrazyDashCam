@@ -38,6 +38,7 @@ public class ObdListener : IDisposable
         _dev.SubscribeDataReceived<EngineRPM>(ObdEventHandler);
         _dev.SubscribeDataReceived<VehicleSpeed>(ObdEventHandler);
         _dev.SubscribeDataReceived<ThrottlePosition>(ObdEventHandler);
+        _dev.SubscribeDataReceived<RelativeThrottlePosition>(ObdEventHandler);
 
         _dev.Initialize();
     }
@@ -73,22 +74,22 @@ public class ObdListener : IDisposable
     {
         _logger.LogInformation("Starting OBD listener...");
 
-        _ = PeriodicRequest<AmbientAirTemperature>(TimeSpan.FromSeconds(10), cancellationToken);
+        // todo: make this configurable
+        _ = PeriodicRequest<AmbientAirTemperature>(TimeSpan.FromMinutes(5), cancellationToken);
+        _ = PeriodicRequest<FuelTankLevelInput>(TimeSpan.FromMinutes(5), cancellationToken);
         _ = PeriodicRequest<EngineCoolantTemperature>(TimeSpan.FromSeconds(10), cancellationToken);
-        _ = PeriodicRequest<CalculatedEngineLoad>(TimeSpan.FromSeconds(5), cancellationToken);
-        _ = PeriodicRequest<AbsoluteLoadValue>(TimeSpan.FromSeconds(5), cancellationToken);
-        _ = PeriodicRequest<FuelTankLevelInput>(TimeSpan.FromSeconds(60), cancellationToken);
         _ = PeriodicRequest<IntakeAirTemperature>(TimeSpan.FromSeconds(10), cancellationToken);
         _ = PeriodicRequest<EngineOilTemperature>(TimeSpan.FromSeconds(10), cancellationToken);
-        _ = PeriodicRequest<EngineRPM>(TimeSpan.FromSeconds(1), cancellationToken);
-        _ = PeriodicRequest<VehicleSpeed>(TimeSpan.FromSeconds(1), cancellationToken);
-        _ = PeriodicRequest<ThrottlePosition>(TimeSpan.FromSeconds(1), cancellationToken);
+        _ = PeriodicRequest<CalculatedEngineLoad>(TimeSpan.FromSeconds(5), cancellationToken);
+        _ = PeriodicRequest<AbsoluteLoadValue>(TimeSpan.FromSeconds(5), cancellationToken);
+        _ = PeriodicRequest<EngineRPM>(TimeSpan.FromSeconds(2), cancellationToken);
+        _ = PeriodicRequest<VehicleSpeed>(TimeSpan.FromSeconds(2), cancellationToken);
+        _ = PeriodicRequest<ThrottlePosition>(TimeSpan.FromSeconds(2), cancellationToken);
+        _ = PeriodicRequest<RelativeThrottlePosition>(TimeSpan.FromSeconds(2), cancellationToken);
     }
 
     private async Task PeriodicRequest<T>(TimeSpan interval, CancellationToken cancellationToken) where T : class, IOBDData, new()
     {
-        await Task.Delay(interval, cancellationToken);
-        
         while (cancellationToken.IsCancellationRequested == false)
         {
             _dev.RequestData<T>();
