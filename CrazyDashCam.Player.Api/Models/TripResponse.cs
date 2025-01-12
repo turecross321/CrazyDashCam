@@ -5,8 +5,8 @@ namespace CrazyDashCam.PlayerAPI.Models;
 public record TripResponse
 {
     public required string DirectoryName { get; set; }
-    public required DateTime StartDate { get; set; }
-    public required DateTime? EndDate { get; set; }
+    public required DateTimeOffset StartDate { get; set; }
+    public required DateTimeOffset? EndDate { get; set; }
     public required string VehicleName { get; set; }
     public required IEnumerable<TripVideoResponse> Videos { get; set; }
 

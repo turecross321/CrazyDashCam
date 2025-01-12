@@ -10,7 +10,7 @@ public class DbRpm : DbValueWithTimestamp<int>
         
     }
     
-    public DbRpm(DateTime date, int value) : base(date, value)
+    public DbRpm(DateTimeOffset date, int value) : base(date, value)
     {
     }
 }

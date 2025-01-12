@@ -3,6 +3,7 @@ using System;
 using CrazyDashCam.Shared.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,81 +11,83 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CrazyDashCam.Shared.Migrations
 {
     [DbContext(typeof(TripDbContext))]
-    partial class TripDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250112101127_SwitchToDatetimeOffset")]
+    partial class SwitchToDatetimeOffset
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "9.0.0");
 
             modelBuilder.Entity("CrazyDashCam.Shared.Database.DbAmbientAirTemperature", b =>
                 {
-                    b.Property<DateTimeOffset>("Date")
+                    b.Property<DateTimeOffset>("Timestamp")
                         .HasColumnType("TEXT");
 
                     b.Property<float>("Value")
                         .HasColumnType("REAL");
 
-                    b.HasKey("Date");
+                    b.HasKey("Timestamp");
 
                     b.ToTable("AmbientAirTemperatures");
                 });
 
             modelBuilder.Entity("CrazyDashCam.Shared.Database.DbCoolantTemperature", b =>
                 {
-                    b.Property<DateTimeOffset>("Date")
+                    b.Property<DateTimeOffset>("Timestamp")
                         .HasColumnType("TEXT");
 
                     b.Property<float>("Value")
                         .HasColumnType("REAL");
 
-                    b.HasKey("Date");
+                    b.HasKey("Timestamp");
 
                     b.ToTable("CoolantTemperatures");
                 });
 
             modelBuilder.Entity("CrazyDashCam.Shared.Database.DbEngineLoad", b =>
                 {
-                    b.Property<DateTimeOffset>("Date")
+                    b.Property<DateTimeOffset>("Timestamp")
                         .HasColumnType("TEXT");
 
                     b.Property<float>("Value")
                         .HasColumnType("REAL");
 
-                    b.HasKey("Date");
+                    b.HasKey("Timestamp");
 
                     b.ToTable("EngineLoads");
                 });
 
             modelBuilder.Entity("CrazyDashCam.Shared.Database.DbFuelLevel", b =>
                 {
-                    b.Property<DateTimeOffset>("Date")
+                    b.Property<DateTimeOffset>("Timestamp")
                         .HasColumnType("TEXT");
 
                     b.Property<float>("Value")
                         .HasColumnType("REAL");
 
-                    b.HasKey("Date");
+                    b.HasKey("Timestamp");
 
                     b.ToTable("FuelLevels");
                 });
 
             modelBuilder.Entity("CrazyDashCam.Shared.Database.DbIntakeTemperature", b =>
                 {
-                    b.Property<DateTimeOffset>("Date")
+                    b.Property<DateTimeOffset>("Timestamp")
                         .HasColumnType("TEXT");
 
                     b.Property<float>("Value")
                         .HasColumnType("REAL");
 
-                    b.HasKey("Date");
+                    b.HasKey("Timestamp");
 
                     b.ToTable("IntakeTemperatures");
                 });
 
             modelBuilder.Entity("CrazyDashCam.Shared.Database.DbLocation", b =>
                 {
-                    b.Property<DateTimeOffset>("Date")
+                    b.Property<DateTimeOffset>("Timestamp")
                         .HasColumnType("TEXT");
 
                     b.Property<double>("Latitude")
@@ -93,59 +96,59 @@ namespace CrazyDashCam.Shared.Migrations
                     b.Property<double>("Longitude")
                         .HasColumnType("REAL");
 
-                    b.HasKey("Date");
+                    b.HasKey("Timestamp");
 
                     b.ToTable("Locations");
                 });
 
             modelBuilder.Entity("CrazyDashCam.Shared.Database.DbOilTemperature", b =>
                 {
-                    b.Property<DateTimeOffset>("Date")
+                    b.Property<DateTimeOffset>("Timestamp")
                         .HasColumnType("TEXT");
 
                     b.Property<float>("Value")
                         .HasColumnType("REAL");
 
-                    b.HasKey("Date");
+                    b.HasKey("Timestamp");
 
                     b.ToTable("OilTemperatures");
                 });
 
             modelBuilder.Entity("CrazyDashCam.Shared.Database.DbRpm", b =>
                 {
-                    b.Property<DateTimeOffset>("Date")
+                    b.Property<DateTimeOffset>("Timestamp")
                         .HasColumnType("TEXT");
 
                     b.Property<int>("Value")
                         .HasColumnType("INTEGER");
 
-                    b.HasKey("Date");
+                    b.HasKey("Timestamp");
 
                     b.ToTable("Rpms");
                 });
 
             modelBuilder.Entity("CrazyDashCam.Shared.Database.DbSpeed", b =>
                 {
-                    b.Property<DateTimeOffset>("Date")
+                    b.Property<DateTimeOffset>("Timestamp")
                         .HasColumnType("TEXT");
 
                     b.Property<int>("Value")
                         .HasColumnType("INTEGER");
 
-                    b.HasKey("Date");
+                    b.HasKey("Timestamp");
 
                     b.ToTable("Speeds");
                 });
 
             modelBuilder.Entity("CrazyDashCam.Shared.Database.DbThrottlePosition", b =>
                 {
-                    b.Property<DateTimeOffset>("Date")
+                    b.Property<DateTimeOffset>("Timestamp")
                         .HasColumnType("TEXT");
 
                     b.Property<float>("Value")
                         .HasColumnType("REAL");
 
-                    b.HasKey("Date");
+                    b.HasKey("Timestamp");
 
                     b.ToTable("ThrottlePositions");
                 });

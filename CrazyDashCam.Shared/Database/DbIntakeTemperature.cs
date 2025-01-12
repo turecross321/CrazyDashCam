@@ -10,7 +10,7 @@ public class DbIntakeTemperature : DbValueWithTimestamp<float>
         
     }
     
-    public DbIntakeTemperature(DateTime date, float value) : base(date, value)
+    public DbIntakeTemperature(DateTimeOffset date, float value) : base(date, value)
     {
     }
 }

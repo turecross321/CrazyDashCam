@@ -2,5 +2,5 @@
 
 public interface IHasTimestamp
 {
-    public DateTime Timestamp { get; set; }
+    public DateTimeOffset Date { get; set; }
 }

@@ -10,7 +10,7 @@ public class DbSpeed : DbValueWithTimestamp<int>
         
     }
     
-    public DbSpeed(DateTime date, int value) : base(date, value)
+    public DbSpeed(DateTimeOffset date, int value) : base(date, value)
     {
     }
 }

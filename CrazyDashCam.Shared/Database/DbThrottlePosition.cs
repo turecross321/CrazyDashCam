@@ -10,7 +10,7 @@ public class DbThrottlePosition : DbValueWithTimestamp<float>
         
     }
     
-    public DbThrottlePosition(DateTime date, float value) : base(date, value)
+    public DbThrottlePosition(DateTimeOffset date, float value) : base(date, value)
     {
     }
 }

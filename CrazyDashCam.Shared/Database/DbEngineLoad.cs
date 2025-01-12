@@ -10,7 +10,7 @@ public class DbEngineLoad : DbValueWithTimestamp<float>
         
     }
     
-    public DbEngineLoad(DateTime date, float value) : base(date, value)
+    public DbEngineLoad(DateTimeOffset date, float value) : base(date, value)
     {
     }
 }

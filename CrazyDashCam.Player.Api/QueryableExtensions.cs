@@ -5,11 +5,12 @@ namespace CrazyDashCam.PlayerAPI;
 public static class QueryableExtensions
 {
     // The extension method that filters based on the Timestamp property of IHasTimestamp
-    public static IEnumerable<T> FilterByTimestamp<T>(this IQueryable<T> source, DateTime start, DateTime end) 
+    public static IEnumerable<T> FilterByTimestamp<T>(this IQueryable<T> source, DateTimeOffset start, DateTimeOffset end) 
         where T : IHasTimestamp
     {
-        IQueryable<T> within = source.Where(i => i.Timestamp >= start && i.Timestamp <= end);
-        T? first = source.Where(i => i.Timestamp < start).OrderBy(i => i.Timestamp).LastOrDefault();
+        // todo: why did i not need to make this an ienumerable when i used DateTimes?
+        IEnumerable<T> within = source.AsEnumerable().Where(i => i.Date >= start && i.Date <= end);
+        T? first = source.AsEnumerable().Where(i => i.Date < start).OrderBy(i => i.Date).LastOrDefault();
 
         return first != null ? within.AsEnumerable().Prepend(first) : within;
     }

@@ -4,7 +4,7 @@ namespace CrazyDashCam.Shared.Database;
 
 public class DbLocation : IHasTimestamp
 {
-    [Key] public DateTime Timestamp { get; set; }
+    [Key] public DateTimeOffset Date { get; set; }
     public double Latitude { get; set; }
     public double Longitude { get; set; }
 }

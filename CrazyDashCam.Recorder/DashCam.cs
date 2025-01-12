@@ -51,7 +51,7 @@ public class DashCam : IDisposable
         return Task.CompletedTask;
     }
     
-    private void HandleEvent(DateTime date, object eventData)
+    private void HandleEvent(DateTimeOffset date, object eventData)
     {
         if (_tripDbContext == null)
         {
@@ -104,7 +104,7 @@ public class DashCam : IDisposable
     {
         _logger.LogInformation("Starting recording");
         
-        DateTime start = DateTime.Now;
+        DateTimeOffset start = DateTimeOffset.Now;
         string folderName = start.ToString("yyyy-MM-dd_HH-mm-ss");
         _tripDirectory = Path.Combine(_configuration.VideoPath, folderName);
         Directory.CreateDirectory(_tripDirectory);
@@ -117,7 +117,7 @@ public class DashCam : IDisposable
         foreach (var recorder in _recorders)
         {
             string fileName = $"{recorder.Camera.Label}.{_configuration.FileFormat}";
-            DateTime date = recorder.StartRecording(cancellationToken, _tripDirectory, fileName);
+            DateTimeOffset date = recorder.StartRecording(cancellationToken, _tripDirectory, fileName);
             metadataVideos.Add(new TripMetadataVideo(recorder.Camera.Label, fileName, date));
         }
         
@@ -152,7 +152,7 @@ public class DashCam : IDisposable
     {
         _logger.LogInformation("Stopping recording");
         
-        DateTime end = DateTime.Now;
+        DateTimeOffset end = DateTimeOffset.Now;
         Debug.Assert(_tripMetadata != null, nameof(_tripMetadata) + " != null");
         _tripMetadata.EndDate = end;
         SaveMetadata();

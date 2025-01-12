@@ -2,6 +2,6 @@
 
 public record TripEventsRequest
 {
-    public DateTime Current { get; set; }
-    public DateTime To { get; set; }
+    public DateTimeOffset From { get; set; }
+    public DateTimeOffset To { get; set; }
 }

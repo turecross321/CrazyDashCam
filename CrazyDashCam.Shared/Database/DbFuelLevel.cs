@@ -10,7 +10,7 @@ public class DbFuelLevel : DbValueWithTimestamp<float>
         
     }
     
-    public DbFuelLevel(DateTime date, float value) : base(date, value)
+    public DbFuelLevel(DateTimeOffset date, float value) : base(date, value)
     {
     }
 }

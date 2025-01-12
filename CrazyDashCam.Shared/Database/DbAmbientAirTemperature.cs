@@ -10,7 +10,7 @@ public class DbAmbientAirTemperature : DbValueWithTimestamp<float>
         
     }
     
-    public DbAmbientAirTemperature(DateTime date, float value) : base(date, value)
+    public DbAmbientAirTemperature(DateTimeOffset date, float value) : base(date, value)
     {
     }
 }

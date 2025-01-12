@@ -12,12 +12,12 @@ public class DbValueWithTimestamp<T> : IHasTimestamp
         
     }
 
-    protected DbValueWithTimestamp(DateTime date, T value)
+    protected DbValueWithTimestamp(DateTimeOffset date, T value)
     {
-        Timestamp = date;
+        Date = date;
         Value = value;
     }
 
-    [Key] public DateTime Timestamp { get; set; }
+    [Key] public DateTimeOffset Date { get; set; }
     public T Value { get; set; }
 }

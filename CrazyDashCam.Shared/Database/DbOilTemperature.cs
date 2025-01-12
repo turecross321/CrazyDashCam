@@ -10,7 +10,7 @@ public class DbOilTemperature : DbValueWithTimestamp<float>
         
     }
     
-    public DbOilTemperature(DateTime date, float value) : base(date, value)
+    public DbOilTemperature(DateTimeOffset date, float value) : base(date, value)
     {
     }
 }

@@ -93,6 +93,7 @@ public class TripController(TripStorageService tripStorage) : ControllerBase
         
         using WebSocket webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
         await using TripDbContext tripDb = new TripDbContext(trip.Path);
+        tripDb.ApplyMigrations();
         
         byte[] buffer = new byte[1024 * 4];
         
@@ -109,23 +110,36 @@ public class TripController(TripStorageService tripStorage) : ControllerBase
                 continue;
             
             string receivedText = Encoding.UTF8.GetString(buffer, 0, result.Count);
-            TripEventsRequest? clientRequest = CrazyJsonSerializer.Deserialize<TripEventsRequest>(receivedText);
+            string json = JsonSerializer.Deserialize<string>(receivedText)!; // todo: fix this shitty bodge
+            TripEventsRequest? clientRequest = CrazyJsonSerializer.Deserialize<TripEventsRequest>(json);
             
             if (clientRequest == null)
                 continue;
 
             TripEventsResponse response = new TripEventsResponse
             {
-                AmbAirTemp = tripDb.AmbientAirTemperatures.FilterByTimestamp(clientRequest.Current, clientRequest.To),
-                CoolTemp = tripDb.CoolantTemperatures.FilterByTimestamp(clientRequest.Current, clientRequest.To),
-                EngLoad = tripDb.EngineLoads.FilterByTimestamp(clientRequest.Current, clientRequest.To),
-                FuelLvl = tripDb.FuelLevels.FilterByTimestamp(clientRequest.Current, clientRequest.To),
-                InTemp = tripDb.IntakeTemperatures.FilterByTimestamp(clientRequest.Current, clientRequest.To),
-                Loc = tripDb.Locations.FilterByTimestamp(clientRequest.Current, clientRequest.To),
-                OilTemp = tripDb.OilTemperatures.FilterByTimestamp(clientRequest.Current, clientRequest.To),
-                Rpm = tripDb.Rpms.FilterByTimestamp(clientRequest.Current, clientRequest.To),
-                Speed = tripDb.Speeds.FilterByTimestamp(clientRequest.Current, clientRequest.To),
-                ThrPos = tripDb.ThrottlePositions.FilterByTimestamp(clientRequest.Current, clientRequest.To)
+                AmbAirTemp = tripDb.AmbientAirTemperatures.FilterByTimestamp(clientRequest.From,
+                    clientRequest.To),
+                CoolTemp = tripDb.CoolantTemperatures.FilterByTimestamp(clientRequest.From,
+                    clientRequest.To),
+                EngLoad = tripDb.EngineLoads.FilterByTimestamp(clientRequest.From,
+                    clientRequest.To),
+                FuelLvl = tripDb.FuelLevels.FilterByTimestamp(clientRequest.From,
+                    clientRequest.To),
+                InTemp = tripDb.IntakeTemperatures.FilterByTimestamp(clientRequest.From,
+                    clientRequest.To),
+                Loc = tripDb.Locations.FilterByTimestamp(clientRequest.From,
+                    clientRequest.To),
+                OilTemp = tripDb.OilTemperatures.FilterByTimestamp(clientRequest.From,
+                    clientRequest.To),
+                Rpm = tripDb.Rpms.FilterByTimestamp(clientRequest.From,
+                    clientRequest.To),
+                Speed = tripDb.Speeds.FilterByTimestamp(clientRequest.From,
+                    clientRequest.To),
+                ThrPos = tripDb.ThrottlePositions.FilterByTimestamp(clientRequest.From,
+                    clientRequest.To),
+                From = clientRequest.From,
+                To = clientRequest.To
             };
             
             // todo: do *some* security measure to make sure this isnt completely abused

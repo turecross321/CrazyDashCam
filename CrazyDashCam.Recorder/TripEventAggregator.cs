@@ -2,16 +2,16 @@ namespace CrazyDashCam.Recorder;
 
 public class TripEventAggregator : IDisposable
 {
-    private readonly List<Action<DateTime, object>> _subscribers = new List<Action<DateTime, object>>();
+    private readonly List<Action<DateTimeOffset, object>> _subscribers = new List<Action<DateTimeOffset, object>>();
 
     // Subscribe to events
-    public void Subscribe(Action<DateTime, object> subscriber)
+    public void Subscribe(Action<DateTimeOffset, object> subscriber)
     {
         _subscribers.Add(subscriber);
     }
 
     // Publish events to all subscribers
-    public void Publish(DateTime date, object eventData)
+    public void Publish(DateTimeOffset date, object eventData)
     {
         foreach (var subscriber in _subscribers)
         {

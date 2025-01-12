@@ -1,3 +1,3 @@
 namespace CrazyDashCam.Shared;
 
-public record TripMetadataVideo(string Label, string FileName, DateTime StartDate);
+public record TripMetadataVideo(string Label, string FileName, DateTimeOffset StartDate);
