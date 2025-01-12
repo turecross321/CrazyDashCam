@@ -1,5 +1,4 @@
 using CrazyDashCam.PlayerAPI.Services;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 

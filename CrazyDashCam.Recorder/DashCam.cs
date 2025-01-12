@@ -153,11 +153,16 @@ public class DashCam : IDisposable
         _tripMetadata.EndDate = end;
         List<TripMetadataVideo> metadataVideos = new List<TripMetadataVideo>();
 
+        DateTimeOffset? lastStartDate = null;
         foreach (CameraRecorder recorder in _recorders)
         {
+            if (lastStartDate == null || recorder.StartDate > lastStartDate)
+                lastStartDate = recorder.StartDate;
+            
             metadataVideos.Add(new TripMetadataVideo(recorder.Camera.Label, recorder.FileName, recorder.StartDate));
         }
-        
+
+        _tripMetadata.AllVideosStartedDate = lastStartDate;
         _tripMetadata.Videos = metadataVideos.ToArray();
         
         

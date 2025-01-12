@@ -1,5 +1,4 @@
-﻿using CrazyDashCam;
-using CrazyDashCam.Recorder;
+﻿using CrazyDashCam.Recorder;
 using CrazyDashCam.Recorder.Configuration;
 using Microsoft.Extensions.Logging;
 

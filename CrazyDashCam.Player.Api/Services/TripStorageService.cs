@@ -1,6 +1,5 @@
 ﻿using CrazyDashCam.PlayerAPI.Models;
 using CrazyDashCam.Shared;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 
 namespace CrazyDashCam.PlayerAPI.Services;

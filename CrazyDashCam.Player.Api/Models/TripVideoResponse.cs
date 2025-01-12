@@ -5,7 +5,7 @@ namespace CrazyDashCam.PlayerAPI.Models;
 public record TripVideoResponse
 {
     public required string Label { get; set; }
-    public required DateTimeOffset StartDate { get; set; }
+    public required DateTimeOffset? StartDate { get; set; }
 
     public static TripVideoResponse FromTripMetadataVideo(TripMetadataVideo video)
     {
