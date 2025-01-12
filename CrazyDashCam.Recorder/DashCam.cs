@@ -112,20 +112,16 @@ public class DashCam : IDisposable
         _tripDbContext = new TripDbContext(_tripDirectory);
         _tripDbContext.ApplyMigrations();
         
-        List<TripMetadataVideo> metadataVideos = new List<TripMetadataVideo>();
-        
         foreach (var recorder in _recorders)
         {
             string fileName = $"{recorder.Camera.Label}.{_configuration.FileFormat}";
-            DateTimeOffset date = recorder.StartRecording(cancellationToken, _tripDirectory, fileName);
-            metadataVideos.Add(new TripMetadataVideo(recorder.Camera.Label, fileName, date));
+            recorder.StartRecording(cancellationToken, _tripDirectory, fileName);
         }
         
         _tripMetadata = new TripMetadata
         {
             StartDate = start,
             VehicleName = _configuration.VehicleName,
-            Videos = metadataVideos.ToArray(),
         };
         
         SaveMetadata();
@@ -155,6 +151,16 @@ public class DashCam : IDisposable
         DateTimeOffset end = DateTimeOffset.Now;
         Debug.Assert(_tripMetadata != null, nameof(_tripMetadata) + " != null");
         _tripMetadata.EndDate = end;
+        List<TripMetadataVideo> metadataVideos = new List<TripMetadataVideo>();
+
+        foreach (CameraRecorder recorder in _recorders)
+        {
+            metadataVideos.Add(new TripMetadataVideo(recorder.Camera.Label, recorder.FileName, recorder.StartDate));
+        }
+        
+        _tripMetadata.Videos = metadataVideos.ToArray();
+        
+        
         SaveMetadata();
         
         _obdListener?.Dispose();

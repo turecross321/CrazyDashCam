@@ -9,6 +9,8 @@ public class CameraRecorder(ILogger logger, Camera camera)
 {
     public Camera Camera { get; } = camera;
     private Process? _process = null;
+    public DateTimeOffset? StartDate { get; private set; }
+    public string FileName { get; private set; }
 
     private string GetSupportedFormat()
     {
@@ -22,7 +24,7 @@ public class CameraRecorder(ILogger logger, Camera camera)
         throw new Exception("Unsupported OS");
     }
 
-    public DateTimeOffset StartRecording(CancellationToken cancellationToken, string directory, string fileName)
+    public void StartRecording(CancellationToken cancellationToken, string directory, string fileName)
     {
         string output = Path.Combine(directory, fileName);
         logger.LogInformation("Starting recording for {device} at {output}", Camera, output);
@@ -61,10 +63,10 @@ public class CameraRecorder(ILogger logger, Camera camera)
         
         _process.BeginOutputReadLine();
         _process.BeginErrorReadLine();
+
+        FileName = fileName;
         
         cancellationToken.Register(StopRecording);
-        return DateTimeOffset.Now;
-        // todo: improve date start system
     }
 
     private void StopRecording()
@@ -106,13 +108,18 @@ public class CameraRecorder(ILogger logger, Camera camera)
 
     private void ProcessOnErrorDataReceived(object sender, DataReceivedEventArgs e)
     {
+        if (e.Data?.StartsWith("frame=") ?? false)
+        {
+            StartDate ??= DateTimeOffset.Now;
+        }
+        
         if (e.Data?.Contains("error", StringComparison.InvariantCultureIgnoreCase) ?? false)
         {
             logger.LogError("{data}", e.Data);
         }
         else
         {
-            logger.LogTrace("{data}", e.Data);
+            logger.LogInformation("{data}", e.Data);
         }
     }
 
