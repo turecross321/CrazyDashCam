@@ -90,6 +90,8 @@ public class ObdListener : IDisposable
 
     private async Task PeriodicRequest<T>(TimeSpan interval, CancellationToken cancellationToken) where T : class, IOBDData, new()
     {
+        await Task.Delay(interval, cancellationToken);
+        
         while (cancellationToken.IsCancellationRequested == false)
         {
             _dev.RequestData<T>();
