@@ -120,7 +120,7 @@ public class DashCam : IDisposable
         
         foreach (var recorder in _recorders)
         {
-            string fileName = $"{recorder.Camera.Label}.{_configuration.FileFormat}";
+            string fileName = $"{recorder.Camera.Label.ToValidFileName()}.mp4";
             recorder.StartRecording(cancellationToken, _tripDirectory, fileName);
         }
         
