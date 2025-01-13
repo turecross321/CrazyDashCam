@@ -24,7 +24,7 @@ public class CameraRecorder(ILogger logger, Camera camera)
         throw new Exception("Unsupported OS");
     }
 
-    public void StartRecording(CancellationToken cancellationToken, string directory, string fileName)
+    public void StartRecording(CancellationToken cancellationToken, string directory, string fileName, string encoder)
     {
         string output = Path.Combine(directory, fileName);
         logger.LogInformation("Starting recording for {device} at {output}", Camera, output);
@@ -35,6 +35,7 @@ public class CameraRecorder(ILogger logger, Camera camera)
             Arguments = $" -framerate {Camera.Fps}" + 
                         $" -f {GetSupportedFormat()}" +
                         $" -i {Camera.DeviceName}" +
+                        $" -c:v {encoder}" +
                         $" -fps_mode vfr" + // Synchronizes video frames to maintain constant frame rate
                         $" -video_size {Camera.ResolutionWidth}x{Camera.ResolutionHeight}" +
                         $" -copyinkf" +

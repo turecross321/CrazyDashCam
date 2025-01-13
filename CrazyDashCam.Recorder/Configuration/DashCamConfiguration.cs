@@ -11,7 +11,8 @@ public class DashCamConfiguration
     public bool AutomaticallyConnectToObdBluetooth { get; init; } = false;
     public string ObdSerialPort { get; init; } = "";
     public bool UseObd { get; init; } = false;
-    public string VehicleName { get; init; }= "SKODA Octavia C 1.0TSI";
+    public string VehicleName { get; init; } =  "SKODA Octavia C 1.0TSI";
+    public string VideoEncoder { get; init; } = "h264_v4l2m2m";
 
     private static string FilePath => Path.Combine(Directory.GetCurrentDirectory(), "config.json");
 
