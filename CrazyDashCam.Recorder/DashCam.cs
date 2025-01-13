@@ -17,7 +17,6 @@ public class DashCam : IDisposable
     private readonly List<CameraRecorder> _recorders = [];
     private TripEventAggregator? _eventAggregator;
     private ObdListener? _obdListener;
-    private bool _recording = false;
     
     private TripMetadata? _tripMetadata;
     private string? _tripDirectory;
@@ -143,8 +142,7 @@ public class DashCam : IDisposable
             _obdListener = new ObdListener(_logger, _eventAggregator, _configuration.ObdSerialPort);
             _obdListener.StartListening(cancellationToken);
         }
-
-        _recording = true;
+        
         _logger.LogInformation("Started recording");
         
         cancellationToken.Register(StopRecording);
@@ -165,7 +163,7 @@ public class DashCam : IDisposable
             if (lastStartDate == null || recorder.StartDate > lastStartDate)
                 lastStartDate = recorder.StartDate;
             
-            metadataVideos.Add(new TripMetadataVideo(recorder.Camera.Label, recorder.FileName, recorder.StartDate));
+            metadataVideos.Add(new TripMetadataVideo(recorder.Camera.Label, recorder.FileName!, recorder.StartDate));
         }
 
         _tripMetadata.AllVideosStartedDate = lastStartDate;
@@ -180,7 +178,6 @@ public class DashCam : IDisposable
         _tripDbContext?.SaveChanges();
         _tripDbContext?.Dispose();
         
-        _recording = false;
         _tripMetadata = null;
         _tripDirectory = null;
         

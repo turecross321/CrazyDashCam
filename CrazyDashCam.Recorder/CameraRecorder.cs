@@ -10,7 +10,7 @@ public class CameraRecorder(ILogger logger, Camera camera)
     public Camera Camera { get; } = camera;
     private Process? _process = null;
     public DateTimeOffset? StartDate { get; private set; }
-    public string FileName { get; private set; }
+    public string? FileName { get; private set; }
 
     private string GetSupportedFormat()
     {
