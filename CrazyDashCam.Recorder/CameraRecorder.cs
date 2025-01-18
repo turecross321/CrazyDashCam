@@ -51,41 +51,49 @@ public class CameraRecorder
     private string GetFfmpegArguments(Camera camera, string videoEncoder, string audioEncoder, string output)
     {
         string arguments = "";
+        string videoFormat = GetVideoFormat();
 
         arguments += $" -framerate {camera.Fps}" +
-                     $" -f {GetVideoFormat()}" +
-                     $" -rtbufsize 1G" + // todo: make this more logical
-                     $" -i {camera.DeviceName}";
+                     $" -f {videoFormat}" +
+                     $" -rtbufsize {camera.BufferSizeMb}M";
+
+        if (videoFormat == "dshow")
+        {
+            arguments += $" -i video=\"{camera.DeviceName}\"";
+        }
+        else
+            arguments += $" -i video={camera.DeviceName}";
 
         if (camera.RecordAudio)
         {
-            // Apply audio offset if it's specified
-            if (camera.AudioOffsetSeconds != 0)
-            {
-                arguments += $" -itsoffset {camera.AudioOffsetSeconds.ToString(System.Globalization.CultureInfo.InvariantCulture)}";
-            }
-
-            arguments += $" -f {GetAudioFormat()}" + 
-                         $" -i {camera.AudioDevice}" + // Adds audio input if provided
-                         $" -ar {camera.AudioSampleRate}";  // Set the sample rate for audio input
+            string audioFormat = GetAudioFormat();
+            
+            // if the video uses dshow, we combine the audio to the video input with a colon
+            if (videoFormat == "dshow" || audioFormat == videoFormat)
+                arguments += $":audio=\"{camera.AudioDevice}\"";
+            else
+                arguments += $" -f {GetAudioFormat()}" +
+                         $" -i {camera.AudioDevice}";
         }
+
         arguments +=
             $" -c:v {videoEncoder}" +
             $" -fps_mode vfr" +
             $" -video_size {camera.ResolutionWidth}x{camera.ResolutionHeight}" +
             $" -preset veryfast" +
-            $" -b:v {camera.VideoBitrate}" +
-            $" -g 10" +
-            $" -movflags +faststart" +
-            $" -vf format=yuv420p";
+            $" -b:v {camera.VideoBitrateKbps}k" +
+            $" -g 10";
 
         if (camera.RecordAudio)
-            arguments += $" -c:a {audioEncoder}" +
-                         $" -b:a {camera.AudioBitrate}"; // Adds audio encoding if provided
+            arguments += $" -c:a aac" +
+                         $" -b:a {camera.VideoBitrateKbps}";
 
         arguments +=
+            $" -movflags +faststart" +
+            $" -vf format=yuv420p" +
             $" -async 1" + // Ensure audio and video are in sync
             $" -threads {camera.Threads}" +
+            $" -y" +
             $" \"{output}\"";
 
         return arguments;
