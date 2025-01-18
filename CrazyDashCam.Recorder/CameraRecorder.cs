@@ -62,14 +62,14 @@ public class CameraRecorder
             arguments += $" -i video=\"{camera.DeviceName}\"";
         }
         else
-            arguments += $" -i video={camera.DeviceName}";
+            arguments += $" -i {camera.DeviceName}";
 
         if (camera.RecordAudio)
         {
             string audioFormat = GetAudioFormat();
             
             // if the video uses dshow, we combine the audio to the video input with a colon
-            if (videoFormat == "dshow" || audioFormat == videoFormat)
+            if (videoFormat == "dshow" && audioFormat == videoFormat)
                 arguments += $":audio=\"{camera.AudioDevice}\"";
             else
                 arguments += $" -f {GetAudioFormat()}" +
