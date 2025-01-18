@@ -6,6 +6,7 @@ public record TripVideoResponse
 {
     public required string Label { get; set; }
     public required DateTimeOffset? StartDate { get; set; }
+    public bool MuteAutomaticallyOnPlayback { get; set; } = false;
 
     public static TripVideoResponse FromTripMetadataVideo(TripMetadataVideo video)
     {
@@ -13,6 +14,7 @@ public record TripVideoResponse
         {
             Label = video.Label,
             StartDate = video.StartDate,
+            MuteAutomaticallyOnPlayback = video.MuteAutomaticallyOnPlayback
         };
     }
 }

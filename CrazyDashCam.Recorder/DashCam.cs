@@ -163,7 +163,8 @@ public class DashCam : IDisposable
             if (lastStartDate == null || recorder.StartDate > lastStartDate)
                 lastStartDate = recorder.StartDate;
             
-            metadataVideos.Add(new TripMetadataVideo(recorder.Camera.Label, recorder.FileName!, recorder.StartDate));
+            metadataVideos.Add(new TripMetadataVideo(recorder.Camera.Label, 
+                recorder.FileName!, recorder.StartDate, recorder.Camera.MuteAutomaticallyOnPlayback));
         }
 
         _tripMetadata.AllVideosStartedDate = lastStartDate;
