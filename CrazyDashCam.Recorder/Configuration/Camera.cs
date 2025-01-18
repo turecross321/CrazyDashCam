@@ -10,7 +10,7 @@ public record Camera
     public int ResolutionHeight { get; set; } = 480;
     public bool RecordAudio { get; set; } = false;
     public bool MuteAutomaticallyOnPlayback { get; set; } = false;
-    public long AudioBitrateKbps { get; set; } = 128_000;
+    public long AudioBitrateKbps { get; set; } = 128;
     public string? AudioDevice { get; set; } = "";
     public int Threads { get; set; } = 1;
     public int BufferSizeMb { get; set; } = 100;

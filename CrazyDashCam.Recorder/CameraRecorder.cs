@@ -86,7 +86,7 @@ public class CameraRecorder
 
         if (camera.RecordAudio)
             arguments += $" -c:a aac" +
-                         $" -b:a {camera.VideoBitrateKbps}";
+                         $" -b:a {camera.AudioBitrateKbps}";
 
         arguments +=
             $" -movflags +faststart" +
