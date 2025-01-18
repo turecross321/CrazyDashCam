@@ -11,7 +11,7 @@ ILogger logger = loggerFactory.CreateLogger<Program>();
 CancellationTokenSource cts = new CancellationTokenSource();
 
 DashCamConfiguration config = DashCamConfiguration.LoadOrCreate(logger);
-DashCam cam = new DashCam(logger, config);
-DashCamGpioController controller = new(cam, config);
+using DashCam cam = new DashCam(logger, config);
+using DashCamGpioController controller = new(cam, config);
 
 await Task.Delay(Timeout.Infinite);
