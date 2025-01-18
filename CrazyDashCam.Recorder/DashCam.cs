@@ -65,17 +65,8 @@ public class DashCam : IDisposable
             case EngineCoolantTemperature engineCoolantTemperature:
                 _tripDbContext.CoolantTemperatures.Add(new DbCoolantTemperature(date, engineCoolantTemperature.Temperature));
                 break;
-            case CalculatedEngineLoad calculatedEngineLoad:
-                _tripDbContext.CalculatedEngineLoads.Add(new DbCalculatedEngineLoad(date, calculatedEngineLoad.Load));
-                break;
-            case AbsoluteLoadValue absoluteLoad:
-                _tripDbContext.AbsoluteLoads.Add(new DbAbsoluteLoad(date, absoluteLoad.Load));
-                break;
             case FuelTankLevelInput fuelTankLevelInput:
                 _tripDbContext.FuelLevels.Add(new DbFuelLevel(date, fuelTankLevelInput.Level));
-                break;
-            case IntakeAirTemperature intakeAirTemperature:
-                _tripDbContext.IntakeTemperatures.Add(new DbIntakeTemperature(date, intakeAirTemperature.Temperature));
                 break;
             case EngineOilTemperature engineOilTemperature:
                 _tripDbContext.OilTemperatures.Add(new DbOilTemperature(date, engineOilTemperature.Temperature));
@@ -88,9 +79,6 @@ public class DashCam : IDisposable
                 break;
             case ThrottlePosition throttlePosition:
                 _tripDbContext.ThrottlePositions.Add(new DbThrottlePosition(date, throttlePosition.Position));
-                break;
-            case RelativeThrottlePosition relativeThrottlePosition:
-                _tripDbContext.RelativeThrottlePositions.Add(new DbRelativeThrottlePosition(date, relativeThrottlePosition.Position));
                 break;
         }
     }
