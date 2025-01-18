@@ -76,8 +76,8 @@ public class ObdListener : IDisposable
         _ = PeriodicRequest<EngineCoolantTemperature>(TimeSpan.FromSeconds(10), cancellationToken);
         _ = PeriodicRequest<EngineOilTemperature>(TimeSpan.FromSeconds(10), cancellationToken);
         _ = PeriodicRequest<EngineRPM>(TimeSpan.FromSeconds(2), cancellationToken);
-        _ = PeriodicRequest<VehicleSpeed>(TimeSpan.FromSeconds(2), cancellationToken);
-        _ = PeriodicRequest<ThrottlePosition>(TimeSpan.FromSeconds(2), cancellationToken);
+        _ = PeriodicRequest<VehicleSpeed>(TimeSpan.FromSeconds(1), cancellationToken);
+        _ = PeriodicRequest<ThrottlePosition>(TimeSpan.FromSeconds(1), cancellationToken);
     }
 
     private async Task PeriodicRequest<T>(TimeSpan interval, CancellationToken cancellationToken) where T : class, IOBDData, new()
