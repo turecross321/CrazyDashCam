@@ -8,7 +8,7 @@ public class DashCamGpioController : IDisposable
     private readonly GpioController _gpioController;
     private readonly DashCam _cam;
     private readonly DashCamConfiguration _configuration;
-    private readonly CancellationTokenSource _cancellationTokenSource;
+    private CancellationTokenSource _cancellationTokenSource;
 
     private Dictionary<string, int> _cameraGpioNumbers = new Dictionary<string, int>();
     
@@ -34,10 +34,10 @@ public class DashCamGpioController : IDisposable
         WriteAllLeds(false);
         
         _gpioController.OpenPin(_configuration.GpioPins.StartRecordingButtonPin, PinMode.InputPullUp);
-        _gpioController.RegisterCallbackForPinValueChangedEvent(_configuration.GpioPins.StartRecordingButtonPin, PinEventTypes.Rising, OnStartRecording);
+        _gpioController.RegisterCallbackForPinValueChangedEvent(_configuration.GpioPins.StartRecordingButtonPin, PinEventTypes.Falling, OnStartRecording);
         
         _gpioController.OpenPin(_configuration.GpioPins.StopRecordingButtonPin, PinMode.InputPullUp);
-        _gpioController.RegisterCallbackForPinValueChangedEvent(_configuration.GpioPins.StartRecordingButtonPin, PinEventTypes.Rising, OnStopRecording);
+        _gpioController.RegisterCallbackForPinValueChangedEvent(_configuration.GpioPins.StartRecordingButtonPin, PinEventTypes.Falling, OnStopRecording);
         
         _cam.Warning += CamOnWarning;
         _cam.ObdActivity += CamOnObdActivity;
@@ -81,6 +81,11 @@ public class DashCamGpioController : IDisposable
 
     private void OnStartRecording(object sender, PinValueChangedEventArgs pinValueChangedEventArgs)
     {
+        if (_cam.IsRecording())
+            return;
+
+        _cancellationTokenSource.Cancel();
+        _cancellationTokenSource = new CancellationTokenSource();
         _cam.StartRecording(_cancellationTokenSource.Token);
     }
     

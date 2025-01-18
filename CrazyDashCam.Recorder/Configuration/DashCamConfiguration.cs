@@ -34,7 +34,7 @@ public class DashCamConfiguration
     
     private static DashCamConfiguration? LoadFromFile(ILogger logger, string filePath)
     {
-        logger.LogInformation($"Attempting to load configuration from {filePath}.");
+        logger.LogInformation($"Loading configuration from {filePath}.");
         
         if (!File.Exists(filePath))
         {

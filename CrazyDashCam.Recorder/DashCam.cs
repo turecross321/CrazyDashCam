@@ -21,6 +21,7 @@ public class DashCam : IDisposable
     private TripMetadata? _tripMetadata;
     private string? _tripDirectory;
     private bool _recording = false;
+    public bool IsRecording() => _recording;
 
     private readonly ILogger _logger;
     private readonly DashCamConfiguration _configuration;
@@ -100,6 +101,12 @@ public class DashCam : IDisposable
     
     public async void StartRecording(CancellationToken cancellationToken)
     {
+        if (IsRecording())
+        {
+            _logger.LogWarning("Attempted to start recording while one was already active");
+            return;
+        }
+        
         _logger.LogInformation("Starting recording");
         _recording = true;
         
