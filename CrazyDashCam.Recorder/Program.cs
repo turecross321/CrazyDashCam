@@ -8,8 +8,6 @@ using var loggerFactory = LoggerFactory.Create(builder =>
 });
 ILogger logger = loggerFactory.CreateLogger<Program>();
 
-CancellationTokenSource cts = new CancellationTokenSource();
-
 DashCamConfiguration config = DashCamConfiguration.LoadOrCreate(logger);
 using DashCam cam = new DashCam(logger, config);
 using DashCamGpioController controller = new(cam, config);

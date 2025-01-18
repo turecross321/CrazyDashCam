@@ -100,7 +100,7 @@ public class CameraRecorder : IDisposable
 
         return arguments;
     }
-    public void StartRecording(CancellationToken cancellationToken, string directory, string fileName)
+    public void StartRecording(string directory, string fileName)
     {
         string output = Path.Combine(directory, fileName);
         _logger.LogInformation("Starting recording for {device} at {output}", Camera, output);
@@ -129,15 +129,14 @@ public class CameraRecorder : IDisposable
         _process.BeginErrorReadLine();
 
         FileName = fileName;
-        
-        cancellationToken.Register(StopRecording);
     }
-    private void StopRecording()
+    public Task StopRecording()
     {
         if (_process == null || _process.HasExited)
         {
             _logger.LogWarning("Recording process is not running or has already exited.");
-            return;
+            _dashCam.InvokeWarning();
+            return Task.CompletedTask;
         }
 
         try
@@ -154,6 +153,7 @@ public class CameraRecorder : IDisposable
             if (!_process.HasExited)
             {
                 _logger.LogWarning("Recording process did not stop cleanly. Forcing termination...");
+                _dashCam.InvokeWarning();
                 _process.Kill(); // Force termination if necessary
             }
         }
@@ -165,7 +165,10 @@ public class CameraRecorder : IDisposable
         {
             _process.Dispose();
             _process = null;
+            _dashCam.InvokeRecordingActivity(new RecordingEventArgs(Camera.Label, false));
         }
+
+        return Task.CompletedTask;
     }
 
 
@@ -193,7 +196,9 @@ public class CameraRecorder : IDisposable
 
     public void Dispose()
     {
-        _dashCam.InvokeRecordingActivity(new RecordingEventArgs(Camera.Label, false));
+        if (_process != null)
+            StopRecording();
+        
         _process?.Dispose();
     }
 }

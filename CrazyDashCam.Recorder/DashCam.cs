@@ -121,7 +121,7 @@ public class DashCam : IDisposable
         foreach (var recorder in _recorders)
         {
             string fileName = $"{recorder.Camera.Label.ToValidFileName()}.mp4";
-            recorder.StartRecording(cancellationToken, _tripDirectory, fileName);
+            recorder.StartRecording(_tripDirectory, fileName);
         }
         
         _tripMetadata = new TripMetadata
@@ -144,12 +144,12 @@ public class DashCam : IDisposable
             _obdListener.StartListening(cancellationToken);
         }
         
-        _logger.LogInformation("Started recording");
-        
         cancellationToken.Register(StopRecording);
+        
+        _logger.LogInformation("Started recording");
     }
 
-    private void StopRecording()
+    private async void StopRecording()
     {
         _logger.LogInformation("Stopping recording");
         _recording = false;
@@ -167,6 +167,8 @@ public class DashCam : IDisposable
             
             metadataVideos.Add(new TripMetadataVideo(recorder.Camera.Label, 
                 recorder.FileName!, recorder.StartDate, recorder.Camera.MuteAutomaticallyOnPlayback));
+            
+            await recorder.StopRecording();
         }
 
         _tripMetadata.AllVideosStartedDate = lastStartDate;
@@ -176,9 +178,12 @@ public class DashCam : IDisposable
         
         _obdListener?.Dispose();
         _eventAggregator?.Dispose();
-        
-        _tripDbContext?.SaveChanges();
-        _tripDbContext?.Dispose();
+
+        if (_tripDbContext != null)
+        {
+            await _tripDbContext.SaveChangesAsync();
+            await _tripDbContext.DisposeAsync();
+        }
         
         _tripMetadata = null;
         _tripDirectory = null;
