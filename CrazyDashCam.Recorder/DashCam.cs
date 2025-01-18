@@ -20,6 +20,7 @@ public class DashCam : IDisposable
     
     private TripMetadata? _tripMetadata;
     private string? _tripDirectory;
+    private bool _recording = false;
 
     private readonly ILogger _logger;
     private readonly DashCamConfiguration _configuration;
@@ -100,6 +101,7 @@ public class DashCam : IDisposable
     public async void StartRecording(CancellationToken cancellationToken)
     {
         _logger.LogInformation("Starting recording");
+        _recording = true;
         
         DateTimeOffset start = DateTimeOffset.Now;
         string folderName = start.ToString("yyyy-MM-dd_HH-mm-ss");
@@ -143,6 +145,7 @@ public class DashCam : IDisposable
     private void StopRecording()
     {
         _logger.LogInformation("Stopping recording");
+        _recording = false;
         
         DateTimeOffset end = DateTimeOffset.Now;
         Debug.Assert(_tripMetadata != null, nameof(_tripMetadata) + " != null");
@@ -161,7 +164,6 @@ public class DashCam : IDisposable
 
         _tripMetadata.AllVideosStartedDate = lastStartDate;
         _tripMetadata.Videos = metadataVideos.ToArray();
-        
         
         SaveMetadata();
         
@@ -203,6 +205,9 @@ public class DashCam : IDisposable
 
     public void Dispose()
     {
+        if (_recording)
+            StopRecording();
+        
         _bluetoothClient?.Dispose();
         _tripDbContext?.Dispose();
         _eventAggregator?.Dispose();
