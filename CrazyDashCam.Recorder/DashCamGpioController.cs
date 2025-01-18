@@ -33,10 +33,10 @@ public class DashCamGpioController : IDisposable
 
         WriteAllLeds(false);
         
-        _gpioController.OpenPin(_configuration.GpioPins.StartRecordingButtonPin, PinMode.Input);
+        _gpioController.OpenPin(_configuration.GpioPins.StartRecordingButtonPin, PinMode.InputPullDown);
         _gpioController.RegisterCallbackForPinValueChangedEvent(_configuration.GpioPins.StartRecordingButtonPin, PinEventTypes.Rising, OnStartRecording);
         
-        _gpioController.OpenPin(_configuration.GpioPins.StopRecordingButtonPin, PinMode.Input);
+        _gpioController.OpenPin(_configuration.GpioPins.StopRecordingButtonPin, PinMode.InputPullDown);
         _gpioController.RegisterCallbackForPinValueChangedEvent(_configuration.GpioPins.StartRecordingButtonPin, PinEventTypes.Rising, OnStopRecording);
         
         _cam.Warning += CamOnWarning;
