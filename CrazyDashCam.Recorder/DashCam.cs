@@ -5,6 +5,7 @@ using CrazyDashCam.Shared.Database;
 using InTheHand.Net;
 using InTheHand.Net.Bluetooth;
 using InTheHand.Net.Sockets;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using OBD.NET.OBDData;
 
@@ -182,6 +183,7 @@ public class DashCam : IDisposable
         if (_tripDbContext != null)
         {
             await _tripDbContext.SaveChangesAsync();
+            await _tripDbContext.Database.CloseConnectionAsync();
             await _tripDbContext.DisposeAsync();
         }
         
