@@ -31,6 +31,8 @@ public class DashCamGpioController : IDisposable
             _gpioController.OpenPin(camera.GpioPin.Value, PinMode.Output);
         }
 
+        WriteAllLeds(false);
+        
         _gpioController.OpenPin(_configuration.GpioPins.StartRecordingButtonPin, PinMode.Input);
         _gpioController.RegisterCallbackForPinValueChangedEvent(_configuration.GpioPins.StartRecordingButtonPin, PinEventTypes.Rising, OnStartRecording);
         
@@ -44,6 +46,18 @@ public class DashCamGpioController : IDisposable
         _gpioController.Write(_configuration.GpioPins.RunningLedPin, true);
     }
 
+    private void WriteAllLeds(bool value)
+    {
+        _gpioController.Write(_configuration.GpioPins.WarningLedPin, value);
+        _gpioController.Write(_configuration.GpioPins.RunningLedPin, value);
+        _gpioController.Write(_configuration.GpioPins.ObdLedPin, value);
+
+        foreach (int pin in _cameraGpioNumbers.Values)
+        {
+            _gpioController.Write(pin, value);
+        }
+    }
+    
     private void CamOnRecordingActivity(object? sender, RecordingEventArgs recordingEventArgs)
     {
         int gpioPin = _cameraGpioNumbers[recordingEventArgs.Label];
@@ -75,6 +89,13 @@ public class DashCamGpioController : IDisposable
         _cam.Warning -= CamOnWarning;
         _cam.ObdActivity -= CamOnObdActivity;
         _cam.RecordingActivity -= CamOnRecordingActivity;
+
+        WriteAllLeds(false);
+        
+        foreach (KeyValuePair<string, int> camera in _cameraGpioNumbers)
+        {
+            _gpioController.Write(camera.Value, false);
+        }
         
         _gpioController.Dispose();
     }
