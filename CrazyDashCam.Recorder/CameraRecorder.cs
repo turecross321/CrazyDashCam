@@ -169,12 +169,15 @@ public class CameraRecorder
 
     private void ProcessOnErrorDataReceived(object sender, DataReceivedEventArgs e)
     {
-        if (e.Data?.StartsWith("frame=") ?? false)
+        if (e.Data == null)
+            return;
+        
+        if (e.Data.StartsWith("frame="))
         {
             StartDate ??= DateTimeOffset.Now;
         }
         
-        if (e.Data?.Contains("error", StringComparison.InvariantCultureIgnoreCase) ?? false)
+        if (e.Data.Contains("Cannot open") || e.Data.Contains("error", StringComparison.InvariantCultureIgnoreCase))
         {
             _logger.LogError("{data}", e.Data);
         }
@@ -182,10 +185,5 @@ public class CameraRecorder
         {
             _logger.LogInformation("{data}", e.Data);
         }
-    }
-
-    public void Dispose()
-    {
-        StopRecording();
     }
 }
