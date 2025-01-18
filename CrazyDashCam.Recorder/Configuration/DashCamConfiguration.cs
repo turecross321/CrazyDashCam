@@ -5,7 +5,7 @@ namespace CrazyDashCam.Recorder.Configuration;
 
 public class DashCamConfiguration
 {
-    public Camera[] Cameras { get; init; } = new Camera[] { new Camera("windshield", "/dev/video0", 30, 1_500_000, 640, 480) };
+    public Camera[] Cameras { get; init; } = [new Camera()];
     public string VideoPath { get; init; } = Path.Combine(Environment.CurrentDirectory, "trips/");
     public string Obd2BluetoothAddress { get; init; } = "";
     public bool AutomaticallyConnectToObdBluetooth { get; init; } = false;
@@ -13,6 +13,7 @@ public class DashCamConfiguration
     public bool UseObd { get; init; } = false;
     public string VehicleName { get; init; } =  "SKODA Octavia C 1.0TSI";
     public string VideoEncoder { get; init; } = "h264_v4l2m2m";
+    public string AudioEncoder { get; init; } = "aac";
 
     private static string FilePath => Path.Combine(Directory.GetCurrentDirectory(), "config.json");
 

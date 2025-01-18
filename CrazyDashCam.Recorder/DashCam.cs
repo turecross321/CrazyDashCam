@@ -31,7 +31,7 @@ public class DashCam : IDisposable
 
         foreach (Camera device in configuration.Cameras)
         {
-            CameraRecorder recorder = new CameraRecorder(logger, device);
+            CameraRecorder recorder = new CameraRecorder(logger, device, configuration.VideoEncoder, configuration.AudioEncoder);
             _recorders.Add(recorder);
         }
     }
@@ -120,7 +120,7 @@ public class DashCam : IDisposable
         foreach (var recorder in _recorders)
         {
             string fileName = $"{recorder.Camera.Label.ToValidFileName()}.mp4";
-            recorder.StartRecording(cancellationToken, _tripDirectory, fileName, _configuration.VideoEncoder);
+            recorder.StartRecording(cancellationToken, _tripDirectory, fileName);
         }
         
         _tripMetadata = new TripMetadata

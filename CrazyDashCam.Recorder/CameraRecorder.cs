@@ -5,14 +5,26 @@ using Microsoft.Extensions.Logging;
 
 namespace CrazyDashCam.Recorder;
 
-public class CameraRecorder(ILogger logger, Camera camera)
+public class CameraRecorder
 {
-    public Camera Camera { get; } = camera;
+    public Camera Camera { get; }
     private Process? _process = null;
+    private readonly ILogger _logger;
+
+    public CameraRecorder(ILogger logger, Camera camera, string videoEncoder, string audioEncoder)
+    {
+        _logger = logger;
+        Camera = camera;
+        VideoEncoder = videoEncoder;
+        AudioEncoder = audioEncoder;
+    }
+
+    private string VideoEncoder { get; }
+    private string AudioEncoder { get; }
     public DateTimeOffset? StartDate { get; private set; }
     public string? FileName { get; private set; }
 
-    private string GetSupportedFormat()
+    private string GetVideoFormat()
     {
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             return "v4l2";
@@ -23,28 +35,70 @@ public class CameraRecorder(ILogger logger, Camera camera)
         
         throw new Exception("Unsupported OS");
     }
+    
+    private string GetAudioFormat()
+    {
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            return "alsa"; // Most common for Linux
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            return "dshow";
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            return "avfoundation";
 
-    public void StartRecording(CancellationToken cancellationToken, string directory, string fileName, string encoder)
+        throw new Exception("Unsupported OS");
+    }
+
+    private string GetFfmpegArguments(Camera camera, string videoEncoder, string audioEncoder, string output)
+    {
+        string arguments = "";
+
+        arguments += $" -framerate {camera.Fps}" +
+                     $" -f {GetVideoFormat()}" +
+                     $" -rtbufsize 1G" + // todo: make this more logical
+                     $" -i {camera.DeviceName}";
+
+        if (camera.RecordAudio)
+        {
+            // Apply audio offset if it's specified
+            if (camera.AudioOffsetSeconds != 0)
+            {
+                arguments += $" -itsoffset {camera.AudioOffsetSeconds.ToString(System.Globalization.CultureInfo.InvariantCulture)}";
+            }
+
+            arguments += $" -f {GetAudioFormat()}" + 
+                         $" -i {camera.AudioDevice}" + // Adds audio input if provided
+                         $" -ar {camera.AudioSampleRate}";  // Set the sample rate for audio input
+        }
+        arguments +=
+            $" -c:v {videoEncoder}" +
+            $" -fps_mode vfr" +
+            $" -video_size {camera.ResolutionWidth}x{camera.ResolutionHeight}" +
+            $" -preset veryfast" +
+            $" -b:v {camera.VideoBitrate}" +
+            $" -g 10" +
+            $" -movflags +faststart" +
+            $" -vf format=yuv420p";
+
+        if (camera.RecordAudio)
+            arguments += $" -c:a {audioEncoder}" +
+                         $" -b:a {camera.AudioBitrate}"; // Adds audio encoding if provided
+
+        arguments +=
+            $" -async 1" + // Ensure audio and video are in sync
+            $" -threads {camera.Threads}" +
+            $" \"{output}\"";
+
+        return arguments;
+    }
+    public void StartRecording(CancellationToken cancellationToken, string directory, string fileName)
     {
         string output = Path.Combine(directory, fileName);
-        logger.LogInformation("Starting recording for {device} at {output}", Camera, output);
-
+        _logger.LogInformation("Starting recording for {device} at {output}", Camera, output);
+        
         var startInfo = new ProcessStartInfo
         {
             FileName = "ffmpeg",
-            Arguments = $" -framerate {Camera.Fps}" + 
-                        $" -f {GetSupportedFormat()}" +
-                        $" -i {Camera.DeviceName}" +
-                        $" -c:v {encoder}" +
-                        $" -fps_mode vfr" + // Synchronizes video frames to maintain constant frame rate
-                        $" -video_size {Camera.ResolutionWidth}x{Camera.ResolutionHeight}" +
-                        $" -copyinkf" +
-                        $" -preset fast" + // todo: make preset changable?
-                        $" -b:v {Camera.VideoBitrate}" +
-                        $" -g 10" +
-                        $" -movflags +faststart" +
-                        $" -vf format=yuv420p" +
-                        $" \"{output}\"",
+            Arguments = GetFfmpegArguments(Camera, VideoEncoder, AudioEncoder, output),
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             RedirectStandardInput = true,
@@ -59,7 +113,6 @@ public class CameraRecorder(ILogger logger, Camera camera)
             throw new InvalidOperationException($"Failed to start recording with {Camera}. Is FFmpeg installed and added to PATH?");
         }
         
-        // all output is treated as errors for some reason
         _process.ErrorDataReceived += ProcessOnErrorDataReceived;
         
         _process.BeginOutputReadLine();
@@ -69,18 +122,17 @@ public class CameraRecorder(ILogger logger, Camera camera)
         
         cancellationToken.Register(StopRecording);
     }
-
     private void StopRecording()
     {
         if (_process == null || _process.HasExited)
         {
-            logger.LogWarning("Recording process is not running or has already exited.");
+            _logger.LogWarning("Recording process is not running or has already exited.");
             return;
         }
 
         try
         {
-            logger.LogInformation("Stopping recording for {device}", Camera);
+            _logger.LogInformation("Stopping recording for {device}", Camera);
 
             // Send a graceful termination signal
             _process.StandardInput.WriteLine("q");
@@ -91,13 +143,13 @@ public class CameraRecorder(ILogger logger, Camera camera)
 
             if (!_process.HasExited)
             {
-                logger.LogWarning("Recording process did not stop cleanly. Forcing termination...");
+                _logger.LogWarning("Recording process did not stop cleanly. Forcing termination...");
                 _process.Kill(); // Force termination if necessary
             }
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error stopping recording process for {device}", Camera);
+            _logger.LogError(ex, "Error stopping recording process for {device}", Camera);
         }
         finally
         {
@@ -116,11 +168,11 @@ public class CameraRecorder(ILogger logger, Camera camera)
         
         if (e.Data?.Contains("error", StringComparison.InvariantCultureIgnoreCase) ?? false)
         {
-            logger.LogError("{data}", e.Data);
+            _logger.LogError("{data}", e.Data);
         }
         else
         {
-            logger.LogInformation("{data}", e.Data);
+            _logger.LogInformation("{data}", e.Data);
         }
     }
 
