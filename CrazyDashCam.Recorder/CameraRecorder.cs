@@ -180,7 +180,7 @@ public class CameraRecorder : IDisposable
             _dashCam.InvokeRecordingActivity(new RecordingEventArgs(Camera.Label, true));
         }
         
-        if (e.Data.Contains("Cannot open") || e.Data.Contains("error", StringComparison.InvariantCultureIgnoreCase))
+        if (e.Data.Contains("Cannot open") || e.Data.Contains("Device or resource busy") || e.Data.Contains("error", StringComparison.InvariantCultureIgnoreCase))
         {
             _logger.LogError("{data}", e.Data);
             _dashCam.InvokeWarning();
