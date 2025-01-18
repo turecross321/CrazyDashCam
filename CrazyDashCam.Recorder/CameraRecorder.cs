@@ -5,16 +5,18 @@ using Microsoft.Extensions.Logging;
 
 namespace CrazyDashCam.Recorder;
 
-public class CameraRecorder
+public class CameraRecorder : IDisposable
 {
-    public Camera Camera { get; }
+    public CameraConfiguration Camera { get; }
     private Process? _process = null;
     private readonly ILogger _logger;
+    private readonly DashCam _dashCam;
 
-    public CameraRecorder(ILogger logger, Camera camera, string videoEncoder, string audioEncoder)
+    public CameraRecorder(DashCam dashCam, ILogger logger, CameraConfiguration camera, string videoEncoder, string audioEncoder)
     {
         _logger = logger;
         Camera = camera;
+        _dashCam = dashCam;
         VideoEncoder = videoEncoder;
         AudioEncoder = audioEncoder;
     }
@@ -48,7 +50,7 @@ public class CameraRecorder
         throw new Exception("Unsupported OS");
     }
 
-    private string GetFfmpegArguments(Camera camera, string videoEncoder, string audioEncoder, string output)
+    private string GetFfmpegArguments(CameraConfiguration camera, string videoEncoder, string audioEncoder, string output)
     {
         string arguments = "";
         string videoFormat = GetVideoFormat();
@@ -172,18 +174,26 @@ public class CameraRecorder
         if (e.Data == null)
             return;
         
-        if (e.Data.StartsWith("frame="))
+        if (StartDate == null && e.Data.StartsWith("frame="))
         {
-            StartDate ??= DateTimeOffset.Now;
+            StartDate = DateTimeOffset.Now;
+            _dashCam.InvokeRecordingActivity(new RecordingEventArgs(Camera.Label, true));
         }
         
         if (e.Data.Contains("Cannot open") || e.Data.Contains("error", StringComparison.InvariantCultureIgnoreCase))
         {
             _logger.LogError("{data}", e.Data);
+            _dashCam.InvokeWarning();
         }
         else
         {
             _logger.LogInformation("{data}", e.Data);
         }
+    }
+
+    public void Dispose()
+    {
+        _dashCam.InvokeRecordingActivity(new RecordingEventArgs(Camera.Label, false));
+        _process?.Dispose();
     }
 }

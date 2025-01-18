@@ -12,8 +12,6 @@ CancellationTokenSource cts = new CancellationTokenSource();
 
 DashCamConfiguration config = DashCamConfiguration.LoadOrCreate(logger);
 DashCam cam = new DashCam(logger, config);
-cam.StartRecording(cts.Token);
+DashCamGpioController controller = new(cam, config);
 
-await Task.Delay(15_000);
-
-cts.Cancel();
+await Task.Delay(Timeout.Infinite);

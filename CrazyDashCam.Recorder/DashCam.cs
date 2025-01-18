@@ -24,14 +24,18 @@ public class DashCam : IDisposable
     private readonly ILogger _logger;
     private readonly DashCamConfiguration _configuration;
 
+    public event EventHandler<bool>? Warning; 
+    public event EventHandler<bool>? ObdActivity; 
+    public event EventHandler<RecordingEventArgs>? RecordingActivity; 
+
     public DashCam(ILogger logger, DashCamConfiguration configuration)
     {
         _logger = logger;
         _configuration = configuration;
 
-        foreach (Camera device in configuration.Cameras)
+        foreach (CameraConfiguration device in configuration.Cameras)
         {
-            CameraRecorder recorder = new CameraRecorder(logger, device, configuration.VideoEncoder, configuration.AudioEncoder);
+            CameraRecorder recorder = new(this, logger, device, configuration.VideoEncoder, configuration.AudioEncoder);
             _recorders.Add(recorder);
         }
     }
@@ -171,6 +175,30 @@ public class DashCam : IDisposable
         _tripDirectory = null;
         
         _logger.LogInformation("Stopped recording");
+    }
+
+    /// <summary>
+    /// Signal to listeners that something has gone wrong
+    /// </summary>
+    public void InvokeWarning()
+    {
+        Warning?.Invoke(this, true);
+    }
+    
+    /// <summary>
+    /// Signal to listeners about video recording updates
+    /// </summary>
+    public void InvokeRecordingActivity(RecordingEventArgs args)
+    {
+        RecordingActivity?.Invoke(this, args);
+    }
+    
+    /// <summary>
+    /// Signal to listeners about OBD updates
+    /// </summary>
+    public void InvokeObdActivity(bool value)
+    {
+        ObdActivity?.Invoke(this, value);
     }
 
     public void Dispose()

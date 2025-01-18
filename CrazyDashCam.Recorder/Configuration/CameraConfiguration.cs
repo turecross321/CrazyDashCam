@@ -1,6 +1,6 @@
 namespace CrazyDashCam.Recorder.Configuration;
 
-public record Camera
+public record CameraConfiguration
 {
     public string Label { get; set; } = "Front";
     public string DeviceName { get; set; } = "/dev/video0";
@@ -14,4 +14,5 @@ public record Camera
     public string? AudioDevice { get; set; } = "";
     public int Threads { get; set; } = 1;
     public int BufferSizeMb { get; set; } = 100;
+    public int? GpioPin { get; set; } = null;
 }
