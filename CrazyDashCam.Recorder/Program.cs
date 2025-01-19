@@ -9,7 +9,17 @@ using var loggerFactory = LoggerFactory.Create(builder =>
 ILogger logger = loggerFactory.CreateLogger<Program>();
 
 DashCamConfiguration config = DashCamConfiguration.LoadOrCreate(logger);
-using DashCam cam = new DashCam(logger, config);
-using DashCamGpioController controller = new(cam, config);
+DashCam cam = new DashCam(logger, config);
+DashCamGpioController controller = new(logger, cam, config);
 
-await Task.Delay(Timeout.Infinite);
+try
+{
+    await Task.Delay(Timeout.Infinite);
+}
+finally
+{
+    logger.LogInformation("Disposing shit");
+    // Ensure that Dispose is called even if the program ends unexpectedly
+    cam.Dispose();
+    controller.Dispose();
+}

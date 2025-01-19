@@ -1,5 +1,6 @@
 ﻿using System.Device.Gpio;
 using CrazyDashCam.Recorder.Configuration;
+using Microsoft.Extensions.Logging;
 
 namespace CrazyDashCam.Recorder;
 
@@ -7,15 +8,17 @@ public class DashCamGpioController : IDisposable
 {
     private readonly GpioController _gpioController;
     private readonly DashCam _cam;
+    private readonly ILogger _logger;
     private readonly DashCamConfiguration _configuration;
     private CancellationTokenSource _cancellationTokenSource;
 
     private Dictionary<string, int> _cameraGpioNumbers = new Dictionary<string, int>();
     
-    public DashCamGpioController(DashCam cam, DashCamConfiguration configuration)
+    public DashCamGpioController(ILogger logger, DashCam cam, DashCamConfiguration configuration)
     {
         _gpioController = new GpioController();
         _cam = cam;
+        _logger = logger;
         _configuration = configuration;
         _cancellationTokenSource = new CancellationTokenSource();
 
@@ -48,6 +51,8 @@ public class DashCamGpioController : IDisposable
 
     private void WriteAllLeds(bool value)
     {
+        _logger.LogInformation("Writing all LEDs {value}", value);
+        
         _gpioController.Write(_configuration.GpioPins.WarningLedPin, value);
         _gpioController.Write(_configuration.GpioPins.RunningLedPin, value);
         _gpioController.Write(_configuration.GpioPins.ObdLedPin, value);
@@ -91,6 +96,8 @@ public class DashCamGpioController : IDisposable
     
     public void Dispose()
     {
+        _logger.LogInformation("Disposing " + nameof(DashCamGpioController));
+        
         _cam.Warning -= CamOnWarning;
         _cam.ObdActivity -= CamOnObdActivity;
         _cam.RecordingActivity -= CamOnRecordingActivity;
