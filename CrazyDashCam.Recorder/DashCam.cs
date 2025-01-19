@@ -136,11 +136,19 @@ public class DashCam : IDisposable
 
         if (_configuration.UseObd)
         {
-            if (_configuration.AutomaticallyConnectToObdBluetooth)
-                await ConnectToRfCommBluetoothDevice(_configuration.Obd2BluetoothAddress);
-            
-            _obdListener = new ObdListener(_logger, this, _configuration.ObdSerialPort);
-            _obdListener.StartListening(cancellationToken);
+            try
+            {
+                if (_configuration.AutomaticallyConnectToObdBluetooth)
+                    await ConnectToRfCommBluetoothDevice(_configuration.Obd2BluetoothAddress);
+                
+                _obdListener = new ObdListener(_logger, this, _configuration.ObdSerialPort);
+                _obdListener.StartListening(cancellationToken);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError("{message}", e.Data.ToString());
+                InvokeWarning();
+            }
         }
         
         cancellationToken.Register(StopRecording);

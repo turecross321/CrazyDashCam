@@ -70,7 +70,7 @@ public class ObdListener : IDisposable
     public void StartListening(CancellationToken cancellationToken)
     {
         _logger.LogInformation("Starting OBD listener...");
-
+        
         // todo: make this configurable
         _ = PeriodicRequest<AmbientAirTemperature>(TimeSpan.FromMinutes(5), cancellationToken);
         _ = PeriodicRequest<FuelTankLevelInput>(TimeSpan.FromMinutes(5), cancellationToken);
@@ -79,6 +79,9 @@ public class ObdListener : IDisposable
         _ = PeriodicRequest<EngineRPM>(TimeSpan.FromSeconds(2), cancellationToken);
         _ = PeriodicRequest<VehicleSpeed>(TimeSpan.FromSeconds(1), cancellationToken);
         _ = PeriodicRequest<ThrottlePosition>(TimeSpan.FromSeconds(1), cancellationToken);
+        
+        _dashCam.InvokeObdActivity(true);
+        cancellationToken.Register(() => _dashCam.InvokeObdActivity(false));
     }
 
     private async Task PeriodicRequest<T>(TimeSpan interval, CancellationToken cancellationToken) where T : class, IOBDData, new()
@@ -114,6 +117,7 @@ public class ObdListener : IDisposable
 
     public void Dispose()
     {
+        _dashCam.InvokeObdActivity(false);
         _dev.Dispose();
         _connection.Dispose();
     }
