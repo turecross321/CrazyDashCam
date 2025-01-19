@@ -15,7 +15,7 @@ using DashCamGpioController controller = new(logger, cam, config);
 CancellationTokenSource cancellationTokenSource = new();
 Console.CancelKeyPress += (sender, e) =>
 {
-    // Prevent the application from terminating immediately
+    // Prevent the application from terminating immediately on CTRL + C
     e.Cancel = true;
     cancellationTokenSource.Cancel();
 };
@@ -26,11 +26,5 @@ try
 }
 catch (OperationCanceledException)
 {
-    // Handle graceful shutdown if needed
     Console.WriteLine("Application shutdown initiated...");
-}
-finally
-{
-    // Ensure Dispose is called when application is shutting down
-    controller.Dispose();
 }
