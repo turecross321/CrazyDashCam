@@ -9,17 +9,28 @@ using var loggerFactory = LoggerFactory.Create(builder =>
 ILogger logger = loggerFactory.CreateLogger<Program>();
 
 DashCamConfiguration config = DashCamConfiguration.LoadOrCreate(logger);
-DashCam cam = new DashCam(logger, config);
-DashCamGpioController controller = new(logger, cam, config);
+using DashCam cam = new DashCam(logger, config);
+using DashCamGpioController controller = new(logger, cam, config);
+
+CancellationTokenSource cancellationTokenSource = new();
+Console.CancelKeyPress += (sender, e) =>
+{
+    // Prevent the application from terminating immediately
+    e.Cancel = true;
+    cancellationTokenSource.Cancel();
+};
 
 try
 {
-    await Task.Delay(Timeout.Infinite);
+    await Task.Delay(Timeout.Infinite, cancellationTokenSource.Token);
+}
+catch (OperationCanceledException)
+{
+    // Handle graceful shutdown if needed
+    Console.WriteLine("Application shutdown initiated...");
 }
 finally
 {
-    logger.LogInformation("Disposing shit");
-    // Ensure that Dispose is called even if the program ends unexpectedly
-    cam.Dispose();
+    // Ensure Dispose is called when application is shutting down
     controller.Dispose();
 }
