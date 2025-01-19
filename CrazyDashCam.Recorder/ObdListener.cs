@@ -1,3 +1,4 @@
+using CrazyDashCam.Shared.Database;
 using Microsoft.Extensions.Logging;
 using OBD.NET.Communication;
 using OBD.NET.Devices;
@@ -11,13 +12,13 @@ public class ObdListener : IDisposable
 {
     private readonly SerialConnection _connection;
     private readonly ELM327 _dev;
-    private readonly TripEventAggregator _eventAggregator;
     private readonly ILogger _logger;
+    private readonly DashCam _dashCam;
 
-    public ObdListener(ILogger logger, TripEventAggregator eventAggregator, string obdPort)
+    public ObdListener(ILogger logger, DashCam dashCam, string obdPort)
     {
         _logger = logger;
-        _eventAggregator = eventAggregator;
+        _dashCam = dashCam;
         
         if (string.IsNullOrEmpty(obdPort))
         {
@@ -93,7 +94,22 @@ public class ObdListener : IDisposable
     
     private void ObdEventHandler<T>(object sender, DataReceivedEventArgs<T> args) where T : IOBDData
     {
-        _eventAggregator.Publish(args.Timestamp, args.Data);
+        IHasTimestamp dbEvent = args.Data switch
+        {
+            AmbientAirTemperature ambientAirTemperature => new DbAmbientAirTemperature(args.Timestamp,
+                ambientAirTemperature.Temperature),
+            EngineCoolantTemperature engineCoolantTemperature => new DbCoolantTemperature(args.Timestamp,
+                engineCoolantTemperature.Temperature),
+            FuelTankLevelInput fuelTankLevelInput => new DbFuelLevel(args.Timestamp, fuelTankLevelInput.Level),
+            EngineOilTemperature engineOilTemperature => new DbOilTemperature(args.Timestamp,
+                engineOilTemperature.Temperature),
+            EngineRPM engineRpm => new DbRpm(args.Timestamp, engineRpm.Rpm),
+            VehicleSpeed speed => new DbSpeed(args.Timestamp, speed.Speed),
+            ThrottlePosition throttlePosition => new DbThrottlePosition(args.Timestamp, throttlePosition.Position),
+            _ => throw new ArgumentNullException(nameof(args))
+        };
+
+        _dashCam.AddTripData(dbEvent);
     }
 
     public void Dispose()

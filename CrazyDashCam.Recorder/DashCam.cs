@@ -16,7 +16,6 @@ public class DashCam : IDisposable
     private BluetoothClient? _bluetoothClient;
     private TripDbContext? _tripDbContext;
     private readonly List<CameraRecorder> _recorders = [];
-    private TripEventAggregator? _eventAggregator;
     private ObdListener? _obdListener;
     
     private TripMetadata? _tripMetadata;
@@ -57,7 +56,7 @@ public class DashCam : IDisposable
         return Task.CompletedTask;
     }
     
-    private void HandleEvent(DateTimeOffset date, object eventData)
+    public void AddTripData(IHasTimestamp eventData)
     {
         if (_tripDbContext == null)
         {
@@ -66,27 +65,29 @@ public class DashCam : IDisposable
         
         switch (eventData)
         {
-            case AmbientAirTemperature ambientAirTemperature:
-                _tripDbContext.AmbientAirTemperatures.Add(new DbAmbientAirTemperature(date, ambientAirTemperature.Temperature));
+            case DbAmbientAirTemperature ambientAirTemperature:
+                _tripDbContext.AmbientAirTemperatures.Add(ambientAirTemperature);
                 break;
-            case EngineCoolantTemperature engineCoolantTemperature:
-                _tripDbContext.CoolantTemperatures.Add(new DbCoolantTemperature(date, engineCoolantTemperature.Temperature));
+            case DbCoolantTemperature engineCoolantTemperature:
+                _tripDbContext.CoolantTemperatures.Add(engineCoolantTemperature);
                 break;
-            case FuelTankLevelInput fuelTankLevelInput:
-                _tripDbContext.FuelLevels.Add(new DbFuelLevel(date, fuelTankLevelInput.Level));
+            case DbFuelLevel fuelTankLevelInput:
+                _tripDbContext.FuelLevels.Add(fuelTankLevelInput);
                 break;
-            case EngineOilTemperature engineOilTemperature:
-                _tripDbContext.OilTemperatures.Add(new DbOilTemperature(date, engineOilTemperature.Temperature));
+            case DbOilTemperature engineOilTemperature:
+                _tripDbContext.OilTemperatures.Add(engineOilTemperature);
                 break;
-            case EngineRPM engineRpm:
-                _tripDbContext.Rpms.Add(new DbRpm(date, engineRpm.Rpm));
+            case DbRpm engineRpm:
+                _tripDbContext.Rpms.Add(engineRpm);
                 break;
-            case VehicleSpeed speed:
-                _tripDbContext.Speeds.Add(new DbSpeed(date, speed.Speed));
+            case DbSpeed speed:
+                _tripDbContext.Speeds.Add(speed);
                 break;
-            case ThrottlePosition throttlePosition:
-                _tripDbContext.ThrottlePositions.Add(new DbThrottlePosition(date, throttlePosition.Position));
+            case DbThrottlePosition throttlePosition:
+                _tripDbContext.ThrottlePositions.Add(throttlePosition);
                 break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(eventData), "Tried to add invalid database entry");
         }
     }
 
@@ -132,16 +133,13 @@ public class DashCam : IDisposable
         };
         
         SaveMetadata();
-        
-        _eventAggregator = new TripEventAggregator();
-        _eventAggregator.Subscribe(HandleEvent);
 
         if (_configuration.UseObd)
         {
             if (_configuration.AutomaticallyConnectToObdBluetooth)
                 await ConnectToRfCommBluetoothDevice(_configuration.Obd2BluetoothAddress);
             
-            _obdListener = new ObdListener(_logger, _eventAggregator, _configuration.ObdSerialPort);
+            _obdListener = new ObdListener(_logger, this, _configuration.ObdSerialPort);
             _obdListener.StartListening(cancellationToken);
         }
         
@@ -178,7 +176,6 @@ public class DashCam : IDisposable
         SaveMetadata();
         
         _obdListener?.Dispose();
-        _eventAggregator?.Dispose();
 
         if (_tripDbContext != null)
         {
@@ -224,6 +221,5 @@ public class DashCam : IDisposable
         
         _bluetoothClient?.Dispose();
         _tripDbContext?.Dispose();
-        _eventAggregator?.Dispose();
     }
 }
