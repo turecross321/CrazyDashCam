@@ -166,6 +166,7 @@ public class CameraRecorder : IDisposable
             _process.Dispose();
             _process = null;
             _dashCam.InvokeRecordingActivity(new RecordingEventArgs(Camera.Label, false));
+            StartDate = null;
         }
 
         return Task.CompletedTask;

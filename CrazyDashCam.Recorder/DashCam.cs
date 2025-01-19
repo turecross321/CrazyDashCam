@@ -191,6 +191,10 @@ public class DashCam : IDisposable
             await _tripDbContext.Database.CloseConnectionAsync();
             await _tripDbContext.DisposeAsync();
         }
+        else
+        {
+            _logger.LogError("_tripDbContext is null?");
+        }
         
         _tripMetadata = null;
         _tripDirectory = null;
