@@ -6,7 +6,9 @@ using Microsoft.Extensions.Logging;
 
 using var loggerFactory = LoggerFactory.Create(builder =>
 {
-    builder.AddConsole();
+    builder
+        .AddConsole()
+        .SetMinimumLevel(LogLevel.Trace); // todo: some command argument
 });
 ILogger logger = loggerFactory.CreateLogger<Program>();
 

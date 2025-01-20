@@ -191,7 +191,7 @@ public class CameraRecorder : IDisposable
         }
         else
         {
-            _logger.LogTrace("{data}", e.Data);
+            _logger.LogDebug("{data}", e.Data);
         }
     }
 
