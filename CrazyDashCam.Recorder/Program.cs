@@ -28,12 +28,14 @@ DashCamController controller = config.ControllerType switch
     _ => throw new ArgumentOutOfRangeException()
 };
 
+logger.LogInformation("Running CrazyDashCam using {type}", controller.GetType().Name);
+
 try
 {
     await Task.Delay(Timeout.Infinite, programCancellationTokenSource.Token);
 }
 catch (OperationCanceledException)
 {
-    Console.WriteLine("Application shutdown initiated...");
+    logger.LogInformation("Quitting...");
     controller.Dispose();
 }
