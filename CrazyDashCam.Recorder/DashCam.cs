@@ -146,7 +146,7 @@ public class DashCam : IDisposable
             }
             catch (Exception e)
             {
-                _logger.LogError("{message}", e.Data.ToString());
+                _logger.LogError("OBD ERROR {message}", e.Message);
                 InvokeWarning();
             }
         }
