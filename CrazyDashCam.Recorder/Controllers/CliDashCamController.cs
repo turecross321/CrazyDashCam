@@ -5,22 +5,16 @@ namespace CrazyDashCam.Recorder.Controllers;
 
 public class CliDashCamController : DashCamController
 {
-    public CliDashCamController(ILogger logger, DashCam cam, CancellationTokenSource cancellationToken) : base(logger, cam)
+    private readonly CancellationTokenSource _cancellationTokenSource = new();
+    
+    public CliDashCamController(ILogger logger, DashCam cam) : base(logger, cam)
     {
-        Console.CancelKeyPress += (sender, e) =>
-        {
-            // Prevent the application from terminating immediately on CTRL + C
-            e.Cancel = true;
-            cancellationToken.Cancel();
-        };
-        
-        _ = MonitorKeyPressAsync(cancellationToken.Token);
+        _ = MonitorKeyPressAsync(_cancellationTokenSource.Token);
     }
     
-    
-    private async Task MonitorKeyPressAsync(CancellationToken cancellationToken)
+    private async Task MonitorKeyPressAsync(CancellationToken token)
     {
-        while (!cancellationToken.IsCancellationRequested)
+        while (!token.IsCancellationRequested)
         {
             if (Console.KeyAvailable)
             {
@@ -37,7 +31,7 @@ public class CliDashCamController : DashCamController
                 }
             }
             
-            await Task.Delay(50, cancellationToken);
+            await Task.Delay(50, token);
         }
     }
 
@@ -60,5 +54,12 @@ public class CliDashCamController : DashCamController
         Console.WriteLine($"[OBD]: {value}");
         
         base.CamOnObdActivity(sender, value);
+    }
+
+    private new void Dispose()
+    {
+        _cancellationTokenSource.Cancel();
+        
+        base.Dispose();
     }
 }

@@ -79,7 +79,7 @@ public class GpioDashCamController : DashCamController
     {
         StartRecording();
     }
-    
+
     public new void Dispose()
     {
         Logger.LogInformation("Disposing " + nameof(GpioDashCamController));

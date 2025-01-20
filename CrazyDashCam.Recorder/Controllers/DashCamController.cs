@@ -57,5 +57,7 @@ public abstract class DashCamController : IDisposable
         
         _cam.Dispose();
         _cancellationTokenSource.Dispose();
+        
+        GC.SuppressFinalize(this);
     }
 }
