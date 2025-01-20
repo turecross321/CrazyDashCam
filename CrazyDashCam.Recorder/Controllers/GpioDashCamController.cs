@@ -2,25 +2,19 @@
 using CrazyDashCam.Recorder.Configuration;
 using Microsoft.Extensions.Logging;
 
-namespace CrazyDashCam.Recorder;
+namespace CrazyDashCam.Recorder.Controllers;
 
-public class DashCamGpioController : IDisposable
+public class GpioDashCamController : DashCamController
 {
     private readonly GpioController _gpioController;
-    private readonly DashCam _cam;
-    private readonly ILogger _logger;
     private readonly DashCamConfiguration _configuration;
-    private CancellationTokenSource _cancellationTokenSource;
 
-    private Dictionary<string, int> _cameraGpioNumbers = new Dictionary<string, int>();
+    private readonly Dictionary<string, int> _cameraGpioNumbers = new Dictionary<string, int>();
     
-    public DashCamGpioController(ILogger logger, DashCam cam, DashCamConfiguration configuration)
+    public GpioDashCamController(ILogger logger, DashCam cam, DashCamConfiguration configuration) : base(logger, cam)
     {
         _gpioController = new GpioController();
-        _cam = cam;
-        _logger = logger;
         _configuration = configuration;
-        _cancellationTokenSource = new CancellationTokenSource();
 
         _gpioController.OpenPin(_configuration.GpioPins.WarningLedPin, PinMode.Output);
         _gpioController.OpenPin(_configuration.GpioPins.RunningLedPin, PinMode.Output);
@@ -42,16 +36,12 @@ public class DashCamGpioController : IDisposable
         _gpioController.OpenPin(_configuration.GpioPins.StopRecordingButtonPin, PinMode.InputPullUp);
         _gpioController.RegisterCallbackForPinValueChangedEvent(_configuration.GpioPins.StopRecordingButtonPin, PinEventTypes.Falling, OnStopRecording);
         
-        _cam.Warning += CamOnWarning;
-        _cam.ObdActivity += CamOnObdActivity;
-        _cam.RecordingActivity += CamOnRecordingActivity;
-        
         _gpioController.Write(_configuration.GpioPins.RunningLedPin, true);
     }
 
     private void WriteAllLeds(bool value)
     {
-        _logger.LogInformation("Writing all LEDs {value}", value);
+        Logger.LogInformation("Writing all LEDs {value}", value);
         
         _gpioController.Write(_configuration.GpioPins.WarningLedPin, value);
         _gpioController.Write(_configuration.GpioPins.RunningLedPin, value);
@@ -62,45 +52,37 @@ public class DashCamGpioController : IDisposable
             _gpioController.Write(pin, value);
         }
     }
-    
-    private void CamOnRecordingActivity(object? sender, RecordingEventArgs recordingEventArgs)
+
+
+    protected override void CamOnRecordingActivity(object? sender, RecordingEventArgs recordingEventArgs)
     {
         int gpioPin = _cameraGpioNumbers[recordingEventArgs.Label];
         _gpioController.Write(gpioPin, recordingEventArgs.Recording);
     }
 
-    private void CamOnObdActivity(object? sender, bool value)
+    protected override void CamOnObdActivity(object? sender, bool value)
     {
         _gpioController.Write(_configuration.GpioPins.ObdLedPin, value);
     }
 
-    private void CamOnWarning(object? sender, bool value)
+    protected override void CamOnWarning(object? sender, bool value)
     {
         _gpioController.Write(_configuration.GpioPins.WarningLedPin, value);
     }
 
     private void OnStopRecording(object sender, PinValueChangedEventArgs pinValueChangedEventArgs)
     {
-        _cancellationTokenSource.Cancel();
+        StopRecording();
     }
 
     private void OnStartRecording(object sender, PinValueChangedEventArgs pinValueChangedEventArgs)
     {
-        if (_cam.IsRecording())
-            return;
-
-        _cancellationTokenSource.Cancel();
-        _cancellationTokenSource = new CancellationTokenSource();
-        _cam.StartRecording(_cancellationTokenSource.Token);
+        StartRecording();
     }
     
-    public void Dispose()
+    public new void Dispose()
     {
-        _logger.LogInformation("Disposing " + nameof(DashCamGpioController));
-        
-        _cam.Warning -= CamOnWarning;
-        _cam.ObdActivity -= CamOnObdActivity;
-        _cam.RecordingActivity -= CamOnRecordingActivity;
+        Logger.LogInformation("Disposing " + nameof(GpioDashCamController));
 
         WriteAllLeds(false);
         
@@ -110,5 +92,7 @@ public class DashCamGpioController : IDisposable
         }
         
         _gpioController.Dispose();
+        
+        base.Dispose();
     }
 }

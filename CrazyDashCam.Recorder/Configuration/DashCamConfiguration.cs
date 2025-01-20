@@ -1,3 +1,4 @@
+using CrazyDashCam.Recorder.Controllers;
 using CrazyDashCam.Shared;
 using Microsoft.Extensions.Logging;
 
@@ -14,6 +15,7 @@ public class DashCamConfiguration
     public string VehicleName { get; init; } =  "Skoda Octavia C 1.0TSI";
     public string VideoEncoder { get; init; } = "h264_v4l2m2m";
     public string AudioEncoder { get; init; } = "aac";
+    public DashCamControllerType ControllerType { get; init; } = DashCamControllerType.Cli;
     public GpioPinsConfiguration GpioPins { get; init; } = new GpioPinsConfiguration();
 
     private static string FilePath => Path.Combine(Directory.GetCurrentDirectory(), "config.json");

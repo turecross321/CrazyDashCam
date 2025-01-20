@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace CrazyDashCam.Shared;
 
@@ -7,7 +8,11 @@ public static class CrazyJsonSerializer
     private static JsonSerializerOptions Options => new JsonSerializerOptions()
     {
         WriteIndented = true,
-        PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower
+        PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
+        Converters =
+        {
+            new JsonStringEnumConverter()
+        }
     };
     
     public static string Serialize(object obj)
