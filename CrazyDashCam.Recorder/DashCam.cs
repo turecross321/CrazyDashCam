@@ -7,7 +7,6 @@ using InTheHand.Net.Bluetooth;
 using InTheHand.Net.Sockets;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using OBD.NET.OBDData;
 
 namespace CrazyDashCam.Recorder;
 

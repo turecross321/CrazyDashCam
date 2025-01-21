@@ -1,4 +1,3 @@
-using CrazyDashCam.Recorder.Controllers;
 using CrazyDashCam.Shared;
 using Microsoft.Extensions.Logging;
 

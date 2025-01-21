@@ -1,5 +1,4 @@
-﻿using System.Device.Gpio;
-using CrazyDashCam.Recorder;
+﻿using CrazyDashCam.Recorder;
 using CrazyDashCam.Recorder.Configuration;
 using CrazyDashCam.Recorder.Controllers;
 using Microsoft.Extensions.Logging;
@@ -15,7 +14,7 @@ using var loggerFactory = LoggerFactory.Create(builder =>
 ILogger logger = loggerFactory.CreateLogger<Program>();
 
 CancellationTokenSource programCancellationTokenSource = new();
-Console.CancelKeyPress += (sender, e) =>
+Console.CancelKeyPress += (_, e) =>
 {
     // Prevent the application from terminating immediately on CTRL + C
     e.Cancel = true;

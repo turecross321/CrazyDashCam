@@ -1,5 +1,4 @@
-﻿using CrazyDashCam.Recorder.Configuration;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 
 namespace CrazyDashCam.Recorder.Controllers;
 
