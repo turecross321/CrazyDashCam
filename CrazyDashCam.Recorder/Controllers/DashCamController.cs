@@ -45,7 +45,7 @@ public abstract class DashCamController : IDisposable
         _cam.StartRecording();
     }
 
-    public void Dispose()
+    public virtual void Dispose()
     {
         _cam.Warning -= CamOnWarning;
         _cam.ObdActivity -= CamOnObdActivity;

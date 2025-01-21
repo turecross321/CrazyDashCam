@@ -2,7 +2,7 @@
 
 namespace CrazyDashCam.Recorder.Controllers;
 
-public class CliDashCamController : DashCamController
+public class CliDashCamController : DashCamController, IDisposable
 {
     private readonly CancellationTokenSource _cancellationTokenSource = new();
     
@@ -55,7 +55,7 @@ public class CliDashCamController : DashCamController
         base.CamOnObdActivity(sender, value);
     }
 
-    private new void Dispose()
+    public override void Dispose()
     {
         _cancellationTokenSource.Cancel();
         

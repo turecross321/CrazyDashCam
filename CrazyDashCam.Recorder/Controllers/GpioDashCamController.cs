@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging;
 
 namespace CrazyDashCam.Recorder.Controllers;
 
-public class GpioDashCamController : DashCamController
+public class GpioDashCamController : DashCamController, IDisposable
 {
     private readonly GpioController _gpioController;
     private readonly DashCamConfiguration _configuration;
@@ -80,7 +80,7 @@ public class GpioDashCamController : DashCamController
         StartRecording();
     }
 
-    public new void Dispose()
+    public override void Dispose()
     {
         Logger.LogInformation("Disposing " + nameof(GpioDashCamController));
 
