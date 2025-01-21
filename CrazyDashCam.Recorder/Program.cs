@@ -4,11 +4,13 @@ using CrazyDashCam.Recorder.Configuration;
 using CrazyDashCam.Recorder.Controllers;
 using Microsoft.Extensions.Logging;
 
+bool verbose = args.Contains("-v") || args.Contains("--verbose");
+
 using var loggerFactory = LoggerFactory.Create(builder =>
 {
     builder
         .AddConsole()
-        .SetMinimumLevel(LogLevel.Trace); // todo: some command argument
+        .SetMinimumLevel(verbose ? LogLevel.Trace : LogLevel.Information);
 });
 ILogger logger = loggerFactory.CreateLogger<Program>();
 
