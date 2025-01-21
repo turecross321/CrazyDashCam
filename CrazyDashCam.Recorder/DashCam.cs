@@ -155,7 +155,7 @@ public class DashCam : IDisposable
         _logger.LogInformation("Started recording");
     }
 
-    private async void StopRecording()
+    public async void StopRecording()
     {
         _logger.LogInformation("Stopping recording");
         _recording = false;

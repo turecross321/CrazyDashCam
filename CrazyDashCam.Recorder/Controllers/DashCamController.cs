@@ -6,13 +6,11 @@ public abstract class DashCamController : IDisposable
 {
     protected readonly ILogger Logger;
     private readonly DashCam _cam;
-    private CancellationTokenSource _cancellationTokenSource;
 
     protected DashCamController(ILogger logger, DashCam cam)
     {
         Logger = logger;
         _cam = cam;
-        _cancellationTokenSource = new CancellationTokenSource();
         
         _cam.Warning += CamOnWarning;
         _cam.ObdActivity += CamOnObdActivity;
@@ -36,16 +34,14 @@ public abstract class DashCamController : IDisposable
 
     protected void StopRecording()
     {
-        _cancellationTokenSource.Cancel();
+        _cam.StopRecording();
     }
 
     protected void StartRecording()
     {
         if (_cam.IsRecording())
             return;
-
-        _cancellationTokenSource.Cancel();
-        _cancellationTokenSource = new CancellationTokenSource();
+        
         _cam.StartRecording();
     }
 
@@ -56,7 +52,6 @@ public abstract class DashCamController : IDisposable
         _cam.RecordingActivity -= CamOnRecordingActivity;
         
         _cam.Dispose();
-        _cancellationTokenSource.Dispose();
         
         GC.SuppressFinalize(this);
     }
