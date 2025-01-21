@@ -17,7 +17,7 @@ public abstract class DashCamController : IDisposable
         _cam.RecordingActivity += CamOnRecordingActivity;
     }
 
-    protected virtual void CamOnRecordingActivity(object? sender, RecordingEventArgs recordingEventArgs)
+    protected virtual void CamOnRecordingActivity(object? sender, CameraRecorder recorder)
     {
 
     }
@@ -34,6 +34,9 @@ public abstract class DashCamController : IDisposable
 
     protected void StopRecording()
     {
+        if (!_cam.IsRecording())
+            return;
+        
         _cam.StopRecording();
     }
 

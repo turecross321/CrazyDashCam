@@ -54,10 +54,10 @@ public class GpioDashCamController : DashCamController, IDisposable
     }
 
 
-    protected override void CamOnRecordingActivity(object? sender, RecordingEventArgs recordingEventArgs)
+    protected override void CamOnRecordingActivity(object? sender, CameraRecorder recorder)
     {
-        int gpioPin = _cameraGpioNumbers[recordingEventArgs.Label];
-        _gpioController.Write(gpioPin, recordingEventArgs.Recording);
+        int gpioPin = _cameraGpioNumbers[recorder.Camera.Label];
+        _gpioController.Write(gpioPin, recorder.Recording);
     }
 
     protected override void CamOnObdActivity(object? sender, bool value)

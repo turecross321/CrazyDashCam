@@ -14,12 +14,15 @@ public class CameraRecorder(
     : IDisposable
 {
     public CameraConfiguration Camera { get; } = camera;
+    public bool Recording { get; private set; } = false;
     private Process? _process = null;
 
     private string VideoEncoder { get; } = videoEncoder;
     private string AudioEncoder { get; } = audioEncoder;
     public DateTimeOffset? StartDate { get; private set; }
     public string? FileName { get; private set; }
+
+    private CancellationToken? _recordingCancellationToken;
 
     private static string GetVideoFormat()
     {
@@ -95,12 +98,13 @@ public class CameraRecorder(
 
         return arguments;
     }
-    public void StartRecording(string directory, string fileName)
+    public void StartRecording(string directory, string fileName, CancellationToken cancellationToken)
     {
         string output = Path.Combine(directory, fileName);
+        FileName = fileName;
         logger.LogInformation("Starting recording for {device} at {output}", Camera, output);
         
-        var startInfo = new ProcessStartInfo
+        var startInfo = new ProcessStartInfo 
         {
             FileName = "ffmpeg",
             Arguments = GetFfmpegArguments(Camera, VideoEncoder, AudioEncoder, output),
@@ -110,7 +114,7 @@ public class CameraRecorder(
             UseShellExecute = false,
             CreateNoWindow = true
         };
-
+        
         _process = Process.Start(startInfo);
         
         if (_process == null)
@@ -118,20 +122,30 @@ public class CameraRecorder(
             throw new InvalidOperationException($"Failed to start recording with {Camera}. Is FFmpeg installed and added to PATH?");
         }
         
-        _process.ErrorDataReceived += ProcessOnErrorDataReceived;
-        
+        _process.ErrorDataReceived += ProcessOnDataReceived;
+        _process.OutputDataReceived += ProcessOnDataReceived;
+        _process.Exited += ProcessOnExited;
+
         _process.BeginOutputReadLine();
         _process.BeginErrorReadLine();
 
-        FileName = fileName;
+        _recordingCancellationToken = cancellationToken;
+        _recordingCancellationToken.Value.Register(StopRecording);
     }
-    public Task StopRecording()
+    
+    private void ProcessOnExited(object? sender, EventArgs e)
     {
+        logger.LogInformation("{camera} process exited", Camera.Label);
+    }
+
+    private void StopRecording()
+    {
+        Recording = false;
+        
         if (_process == null || _process.HasExited)
         {
             logger.LogWarning("Recording process is not running or has already exited.");
             dashCam.InvokeWarning();
-            return Task.CompletedTask;
         }
 
         try
@@ -139,7 +153,7 @@ public class CameraRecorder(
             logger.LogInformation("Stopping recording for {device}", Camera);
 
             // Send a graceful termination signal
-            _process.StandardInput.WriteLine("q");
+            _process!.StandardInput.WriteLine("q");
             _process.StandardInput.Flush();
             
             // Wait for the process to exit
@@ -158,25 +172,23 @@ public class CameraRecorder(
         }
         finally
         {
-            _process.Dispose();
+            _process?.Dispose();
             _process = null;
-            dashCam.InvokeRecordingActivity(new RecordingEventArgs(Camera.Label, false));
+            dashCam.InvokeRecordingActivity(this);
             StartDate = null;
         }
-
-        return Task.CompletedTask;
     }
-
-
-    private void ProcessOnErrorDataReceived(object sender, DataReceivedEventArgs e)
+    
+    private void ProcessOnDataReceived(object sender, DataReceivedEventArgs e)
     {
         if (e.Data == null)
             return;
         
-        if (StartDate == null && e.Data.StartsWith("frame="))
+        if (!_recordingCancellationToken!.Value.IsCancellationRequested && !Recording && e.Data.StartsWith("frame="))
         {
+            Recording = true;
             StartDate = DateTimeOffset.Now;
-            dashCam.InvokeRecordingActivity(new RecordingEventArgs(Camera.Label, true));
+            dashCam.InvokeRecordingActivity(this);
         }
         
         if (e.Data.Contains("Cannot open") || e.Data.Contains("Device or resource busy") || e.Data.Contains("error", StringComparison.InvariantCultureIgnoreCase))
