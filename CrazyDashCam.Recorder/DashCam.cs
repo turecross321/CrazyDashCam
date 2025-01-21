@@ -24,6 +24,7 @@ public class DashCam : IDisposable
 
     private readonly ILogger _logger;
     private readonly DashCamConfiguration _configuration;
+    private CancellationTokenSource _cancellationTokenSource;
 
     public event EventHandler<bool>? Warning; 
     public event EventHandler<bool>? ObdActivity; 
@@ -100,7 +101,7 @@ public class DashCam : IDisposable
         File.WriteAllTextAsync(Path.Combine(_tripDirectory, "metadata.json"), metadataJson);
     }
     
-    public async void StartRecording(CancellationToken cancellationToken)
+    public async void StartRecording()
     {
         if (IsRecording())
         {
@@ -110,6 +111,7 @@ public class DashCam : IDisposable
         
         _logger.LogInformation("Starting recording");
         _recording = true;
+        _cancellationTokenSource = new CancellationTokenSource();
         
         DateTimeOffset start = DateTimeOffset.Now;
         string folderName = start.ToString("yyyy-MM-dd_HH-mm-ss");
@@ -141,7 +143,7 @@ public class DashCam : IDisposable
                     await ConnectToRfCommBluetoothDevice(_configuration.Obd2BluetoothAddress);
                 
                 _obdListener = new ObdListener(_logger, this, _configuration.ObdSerialPort);
-                _obdListener.StartListening(cancellationToken);
+                _obdListener.StartListening(_cancellationTokenSource.Token);
             }
             catch (Exception e)
             {
@@ -150,8 +152,6 @@ public class DashCam : IDisposable
             }
         }
         
-        cancellationToken.Register(StopRecording);
-        
         _logger.LogInformation("Started recording");
     }
 
@@ -159,6 +159,7 @@ public class DashCam : IDisposable
     {
         _logger.LogInformation("Stopping recording");
         _recording = false;
+        await _cancellationTokenSource.CancelAsync();
         
         DateTimeOffset end = DateTimeOffset.Now;
         Debug.Assert(_tripMetadata != null, nameof(_tripMetadata) + " != null");

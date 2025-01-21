@@ -46,7 +46,7 @@ public abstract class DashCamController : IDisposable
 
         _cancellationTokenSource.Cancel();
         _cancellationTokenSource = new CancellationTokenSource();
-        _cam.StartRecording(_cancellationTokenSource.Token);
+        _cam.StartRecording();
     }
 
     public void Dispose()
