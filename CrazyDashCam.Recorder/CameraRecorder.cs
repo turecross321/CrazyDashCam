@@ -2,7 +2,6 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using CrazyDashCam.Recorder.Configuration;
 using Microsoft.Extensions.Logging;
-using Xabe.FFmpeg;
 
 namespace CrazyDashCam.Recorder;
 

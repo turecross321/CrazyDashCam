@@ -23,9 +23,6 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Reference Include="Xabe.FFmpeg">
-        <HintPath>..\..\..\.nuget\packages\xabe.ffmpeg\5.2.6\lib\netstandard2.0\Xabe.FFmpeg.dll</HintPath>
-      </Reference>
     </ItemGroup>
 
     <ItemGroup>
