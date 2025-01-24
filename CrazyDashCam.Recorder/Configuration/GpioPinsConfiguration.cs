@@ -8,4 +8,5 @@ public class GpioPinsConfiguration
 
     public int StartRecordingButtonPin { get; set; } = 13;
     public int StopRecordingButtonPin { get; set; } = 6;
+    public int AddHighlightPin { get; set; } = 22;
 }

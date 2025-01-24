@@ -32,6 +32,9 @@ public class CliDashCamController : DashCamController, IDisposable
                     case ConsoleKey.Y:
                         PrintAmountOfFfmpegProccesses();
                         break;
+                    case ConsoleKey.H:
+                        AddHighlight();
+                        break;
                 }
             }
             
@@ -70,6 +73,6 @@ public class CliDashCamController : DashCamController, IDisposable
     {
         _cancellationTokenSource.Cancel();
         
-        base.Dispose();
+        GC.SuppressFinalize(this);
     }
 }

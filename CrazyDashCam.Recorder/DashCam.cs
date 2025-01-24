@@ -119,7 +119,6 @@ public class DashCam : IDisposable
         Directory.CreateDirectory(_tripDirectory);
         
         _tripDbContext = new TripDbContext(_tripDirectory);
-        _tripDbContext.ApplyMigrations();
         
         foreach (var recorder in _recorders)
         {

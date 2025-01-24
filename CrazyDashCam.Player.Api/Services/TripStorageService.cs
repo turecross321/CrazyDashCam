@@ -1,5 +1,6 @@
 ﻿using CrazyDashCam.PlayerAPI.Models;
 using CrazyDashCam.Shared;
+using CrazyDashCam.Shared.Database;
 using Microsoft.Extensions.Caching.Memory;
 
 namespace CrazyDashCam.PlayerAPI.Services;
@@ -10,7 +11,7 @@ public class TripStorageService(ILogger<TripStorageService> logger, IMemoryCache
     private const string TripsDirectory =
         @"C:\Users\MateyMatey\RiderProjects\CrazyDashCam\CrazyDashCam.Recorder\bin\Debug\net9.0\trips";
 
-    private const string MemoryCacheKey = "IndexedTrips";
+    private const string MemoryCacheKey = "CachedTrips";
     
     public async Task<StoredTrip?> GetTrip(string directoryName)
     {
@@ -21,7 +22,12 @@ public class TripStorageService(ILogger<TripStorageService> logger, IMemoryCache
             return null;
 
         TripMetadata? metadata = CrazyJsonSerializer.Deserialize<TripMetadata>(await File.ReadAllTextAsync(metadataPath));
-        return metadata == null ? null : new StoredTrip(tripPath, directoryName, metadata);
+        if (metadata == null)
+            return null;
+
+        await using TripDbContext tripDb = new TripDbContext(tripPath);
+        
+        return new StoredTrip(tripPath, directoryName, metadata, tripDb.Highlights.ToArray());
     }
     
     public async Task<List<StoredTrip>> GetTrips()

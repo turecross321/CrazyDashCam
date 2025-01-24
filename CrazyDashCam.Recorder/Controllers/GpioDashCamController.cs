@@ -35,10 +35,13 @@ public class GpioDashCamController : DashCamController, IDisposable
         
         _gpioController.OpenPin(_configuration.GpioPins.StopRecordingButtonPin, PinMode.InputPullUp);
         _gpioController.RegisterCallbackForPinValueChangedEvent(_configuration.GpioPins.StopRecordingButtonPin, PinEventTypes.Falling, OnStopRecording);
+
+        _gpioController.OpenPin(_configuration.GpioPins.AddHighlightPin, PinMode.InputPullUp);
+        _gpioController.RegisterCallbackForPinValueChangedEvent(_configuration.GpioPins.StopRecordingButtonPin, PinEventTypes.Falling, OnAddHighlight);
         
         _gpioController.Write(_configuration.GpioPins.RunningLedPin, true);
     }
-
+    
     private void WriteAllLeds(bool value)
     {
         Logger.LogInformation("Writing all LEDs {value}", value);
@@ -80,6 +83,12 @@ public class GpioDashCamController : DashCamController, IDisposable
         StartRecording();
     }
 
+    private void OnAddHighlight(object sender, PinValueChangedEventArgs pinValueChangedEventArgs)
+    {
+        AddHighlight();
+    }
+
+    
     public override void Dispose()
     {
         Logger.LogInformation("Disposing " + nameof(GpioDashCamController));
@@ -93,6 +102,6 @@ public class GpioDashCamController : DashCamController, IDisposable
         
         _gpioController.Dispose();
         
-        base.Dispose();
+        GC.SuppressFinalize(this);
     }
 }
