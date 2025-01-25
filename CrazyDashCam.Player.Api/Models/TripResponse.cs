@@ -1,4 +1,6 @@
-﻿namespace CrazyDashCam.PlayerAPI.Models;
+﻿using CrazyDashCam.Shared.Database;
+
+namespace CrazyDashCam.PlayerAPI.Models;
 
 public record TripResponse
 {
@@ -8,6 +10,7 @@ public record TripResponse
     public required string VehicleName { get; set; }
     public required DateTimeOffset? AllVideosStartedDate { get; set; }
     public required IEnumerable<TripVideoResponse>? Videos { get; set; }
+    public required IEnumerable<DbHighlight> Highlights { get; set; }
 
     public static TripResponse FromStoredTrip(StoredTrip item)
     {
@@ -18,7 +21,8 @@ public record TripResponse
             EndDate = item.MetaData.EndDate,
             VehicleName = item.MetaData.VehicleName,
             AllVideosStartedDate = item.MetaData.AllVideosStartedDate,
-            Videos = item.MetaData.Videos?.Select(TripVideoResponse.FromTripMetadataVideo)
+            Videos = item.MetaData.Videos.Select(TripVideoResponse.FromTripMetadataVideo),
+            Highlights = item.Highlights
         };
     }
 }
