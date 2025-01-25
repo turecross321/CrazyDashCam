@@ -8,7 +8,7 @@ namespace CrazyDashCam.PlayerAPI.Services;
 public class TripStorageService(IConfiguration configuration, ILogger<TripStorageService> logger, IMemoryCache cache)
 {
 
-    private string TripsDirectory => configuration.GetValue<string>("TRIPS_DIRECTORY") ?? throw new InvalidOperationException("TRIP_DIRECTORY environment variable is not set");
+    private string TripsDirectory => configuration.GetValue<string>("TRIPS_DIRECTORY") ?? throw new InvalidOperationException("TRIPS_DIRECTORY environment variable is not set");
 
     private const string MemoryCacheKey = "CachedTrips";
     
