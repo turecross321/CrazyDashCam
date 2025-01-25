@@ -5,11 +5,10 @@ using Microsoft.Extensions.Caching.Memory;
 
 namespace CrazyDashCam.PlayerAPI.Services;
 
-public class TripStorageService(ILogger<TripStorageService> logger, IMemoryCache cache)
+public class TripStorageService(IConfiguration configuration, ILogger<TripStorageService> logger, IMemoryCache cache)
 {
-    
-    private const string TripsDirectory =
-        @"C:\Users\MateyMatey\RiderProjects\CrazyDashCam\CrazyDashCam.Recorder\bin\Debug\net9.0\trips";
+
+    private string TripsDirectory => configuration.GetValue<string>("TRIPS_DIRECTORY") ?? throw new InvalidOperationException("TRIP_DIRECTORY environment variable is not set");
 
     private const string MemoryCacheKey = "CachedTrips";
     
