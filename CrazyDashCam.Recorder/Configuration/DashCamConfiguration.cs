@@ -7,6 +7,7 @@ namespace CrazyDashCam.Recorder.Configuration;
 public class DashCamConfiguration
 {
     public CameraConfiguration[] Cameras { get; init; } = [new CameraConfiguration()];
+    // todo: rename to tripspath
     public string VideoPath { get; init; } = Path.Combine(Environment.CurrentDirectory, "trips/");
     public string Obd2BluetoothAddress { get; init; } = "";
     public bool AutomaticallyConnectToObdBluetooth { get; init; } = false;

@@ -4,17 +4,16 @@ using Microsoft.Extensions.Caching.Memory;
 
 namespace CrazyDashCam.PlayerAPI.Services;
 
-public class TripStorageService(ILogger<TripStorageService> logger, IMemoryCache cache)
+public class TripStorageService(ILogger<TripStorageService> logger, ConfigurationService configService, IMemoryCache cache)
 {
     
-    private const string TripsDirectory =
-        @"C:\Users\MateyMatey\RiderProjects\CrazyDashCam\CrazyDashCam.Recorder\bin\Debug\net9.0\trips";
+    private readonly string _tripsDirectory = configService.Config.TripsPath;
 
     private const string MemoryCacheKey = "IndexedTrips";
     
     public async Task<StoredTrip?> GetTrip(string directoryName)
     {
-        string tripPath = Path.Combine(TripsDirectory, directoryName);
+        string tripPath = Path.Combine(_tripsDirectory, directoryName);
         string metadataPath = Path.Combine(tripPath, "metadata.json");
             
         if (!File.Exists(metadataPath))
@@ -31,12 +30,12 @@ public class TripStorageService(ILogger<TripStorageService> logger, IMemoryCache
         
         logger.LogInformation("Getting trips");
         
-        string[] tripDirectories = Directory.GetDirectories(TripsDirectory);
+        string[] tripDirectories = Directory.GetDirectories(_tripsDirectory);
         List<StoredTrip> trips = [];
         
         foreach (string tripPath in tripDirectories)
         {
-            string directoryName = Path.GetRelativePath(TripsDirectory, tripPath);
+            string directoryName = Path.GetRelativePath(_tripsDirectory, tripPath);
             StoredTrip? trip = await GetTrip(directoryName);
             if (trip == null)
                 continue;

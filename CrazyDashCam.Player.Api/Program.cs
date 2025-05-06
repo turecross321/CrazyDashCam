@@ -8,6 +8,7 @@ builder.Services.AddOpenApi();
 builder.Services.AddHealthChecks();
 builder.Services.AddControllers();
 builder.Services.AddMemoryCache();
+builder.Services.AddSingleton<ConfigurationService>();
 builder.Services.AddSingleton<TripStorageService>();
 builder.Services.AddCors(options =>
 {
