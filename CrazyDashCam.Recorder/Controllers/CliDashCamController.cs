@@ -1,9 +1,10 @@
-﻿using CrazyDashCam.Recorder.Configuration;
+﻿using System.ComponentModel.Design;
+using System.Diagnostics;
 using Microsoft.Extensions.Logging;
 
 namespace CrazyDashCam.Recorder.Controllers;
 
-public class CliDashCamController : DashCamController
+public class CliDashCamController : DashCamController, IDisposable
 {
     private readonly CancellationTokenSource _cancellationTokenSource = new();
     
@@ -19,6 +20,8 @@ public class CliDashCamController : DashCamController
             if (Console.KeyAvailable)
             {
                 ConsoleKeyInfo keyInfo = Console.ReadKey(intercept: true);
+                
+                Console.WriteLine(keyInfo.KeyChar);
 
                 switch (keyInfo.Key)
                 {
@@ -28,6 +31,12 @@ public class CliDashCamController : DashCamController
                     case ConsoleKey.T:
                         StopRecording();
                         break;
+                    case ConsoleKey.Y:
+                        PrintAmountOfFfmpegProccesses();
+                        break;
+                    case ConsoleKey.H:
+                        AddHighlight();
+                        break;
                 }
             }
             
@@ -35,11 +44,17 @@ public class CliDashCamController : DashCamController
         }
     }
 
-    protected override void CamOnRecordingActivity(object? sender, RecordingEventArgs recordingEventArgs)
+    private void PrintAmountOfFfmpegProccesses()
     {
-        Console.WriteLine($"[RECORDING]: {recordingEventArgs.Label}={recordingEventArgs.Recording}");
+        var ffmpegs = Process.GetProcesses().Where(p => p.ProcessName.Contains("ffmpeg"));
+        Logger.LogInformation("{count} instances of ffmpeg are running", ffmpegs.Count());
+    }
+
+    protected override void CamOnRecordingActivity(object? sender, CameraRecorder recorder)
+    {
+        Console.WriteLine($"[RECORDING]: {recorder.Camera.Label}={recorder.Recording}");
         
-        base.CamOnRecordingActivity(sender, recordingEventArgs);
+        base.CamOnRecordingActivity(sender, recorder);
     }
 
     protected override void CamOnWarning(object? sender, bool value)
@@ -56,10 +71,10 @@ public class CliDashCamController : DashCamController
         base.CamOnObdActivity(sender, value);
     }
 
-    private new void Dispose()
+    public override void Dispose()
     {
         _cancellationTokenSource.Cancel();
         
-        base.Dispose();
+        GC.SuppressFinalize(this);
     }
 }

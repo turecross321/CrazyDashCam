@@ -43,8 +43,10 @@ public class TripStorageService(ILogger<TripStorageService> logger, Configuratio
             trips.Add(trip);
         }
 
-        cache.Set(MemoryCacheKey, trips, TimeSpan.FromSeconds(60));
+        var ordered = trips.OrderByDescending(t => t.MetaData.StartDate).ToList();
+
+        cache.Set(MemoryCacheKey, ordered, TimeSpan.FromSeconds(60));
         
-        return trips;
+        return ordered;
     }
 }

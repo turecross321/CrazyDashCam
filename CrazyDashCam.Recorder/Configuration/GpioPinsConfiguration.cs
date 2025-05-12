@@ -2,10 +2,11 @@
 
 public class GpioPinsConfiguration
 {
-    public int WarningLedPin { get; set; } = 11;
-    public int RunningLedPin { get; set; } = 13;
-    public int ObdLedPin { get; set; } = 15;
+    public int WarningLedPin { get; set; } = 19;
+    public int RunningLedPin { get; set; } = 26;
+    public int ObdLedPin { get; set; } = 19;
 
-    public int StartRecordingButtonPin { get; set; } = 16;
-    public int StopRecordingButtonPin { get; set; } = 18;
+    public int StartRecordingButtonPin { get; set; } = 13;
+    public int StopRecordingButtonPin { get; set; } = 6;
+    public int AddHighlightPin { get; set; } = 22;
 }

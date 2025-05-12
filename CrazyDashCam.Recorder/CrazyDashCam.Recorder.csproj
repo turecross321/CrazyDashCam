@@ -3,6 +3,7 @@
     <PropertyGroup>
         <OutputType>Exe</OutputType>
         <TargetFramework>net9.0</TargetFramework>
+        <RuntimeIdentifiers>linux-arm64;win-x64;osx-arm64</RuntimeIdentifiers>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
     </PropertyGroup>
@@ -23,9 +24,6 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Reference Include="Xabe.FFmpeg">
-        <HintPath>..\..\..\.nuget\packages\xabe.ffmpeg\5.2.6\lib\netstandard2.0\Xabe.FFmpeg.dll</HintPath>
-      </Reference>
     </ItemGroup>
 
     <ItemGroup>

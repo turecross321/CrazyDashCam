@@ -2,7 +2,7 @@
 
 namespace CrazyDashCam.PlayerAPI.Models;
 
-public record TripEventsResponse
+public record RealTimeTripEventsResponse
 {
     public required IEnumerable<DbAmbientAirTemperature> AmbAirTemp { get; set; }
     public required IEnumerable<DbCoolantTemperature> CoolTemp { get; set; }

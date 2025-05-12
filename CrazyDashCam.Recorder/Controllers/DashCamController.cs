@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using CrazyDashCam.Shared.Database;
+using Microsoft.Extensions.Logging;
 
 namespace CrazyDashCam.Recorder.Controllers;
 
@@ -6,20 +7,18 @@ public abstract class DashCamController : IDisposable
 {
     protected readonly ILogger Logger;
     private readonly DashCam _cam;
-    private CancellationTokenSource _cancellationTokenSource;
 
     protected DashCamController(ILogger logger, DashCam cam)
     {
         Logger = logger;
         _cam = cam;
-        _cancellationTokenSource = new CancellationTokenSource();
         
         _cam.Warning += CamOnWarning;
         _cam.ObdActivity += CamOnObdActivity;
         _cam.RecordingActivity += CamOnRecordingActivity;
     }
 
-    protected virtual void CamOnRecordingActivity(object? sender, RecordingEventArgs recordingEventArgs)
+    protected virtual void CamOnRecordingActivity(object? sender, CameraRecorder recorder)
     {
 
     }
@@ -36,27 +35,40 @@ public abstract class DashCamController : IDisposable
 
     protected void StopRecording()
     {
-        _cancellationTokenSource.Cancel();
+        if (!_cam.IsRecording())
+            return;
+        
+        _cam.StopRecording();
     }
 
     protected void StartRecording()
     {
         if (_cam.IsRecording())
             return;
-
-        _cancellationTokenSource.Cancel();
-        _cancellationTokenSource = new CancellationTokenSource();
-        _cam.StartRecording(_cancellationTokenSource.Token);
+        
+        _cam.StartRecording();
     }
 
-    public void Dispose()
+    protected void AddHighlight()
+    {
+        if (!_cam.IsRecording())
+            return;
+        
+        Logger.LogInformation("Adding highlight");
+        
+        _cam.AddTripData(new DbHighlight
+        {
+            Date = DateTimeOffset.Now
+        });
+    }
+
+    public virtual void Dispose()
     {
         _cam.Warning -= CamOnWarning;
         _cam.ObdActivity -= CamOnObdActivity;
         _cam.RecordingActivity -= CamOnRecordingActivity;
         
         _cam.Dispose();
-        _cancellationTokenSource.Dispose();
         
         GC.SuppressFinalize(this);
     }

@@ -1,19 +1,20 @@
-﻿using System.Device.Gpio;
-using CrazyDashCam.Recorder;
+﻿using CrazyDashCam.Recorder;
 using CrazyDashCam.Recorder.Configuration;
 using CrazyDashCam.Recorder.Controllers;
 using Microsoft.Extensions.Logging;
+
+bool verbose = args.Contains("-v") || args.Contains("--verbose");
 
 using var loggerFactory = LoggerFactory.Create(builder =>
 {
     builder
         .AddConsole()
-        .SetMinimumLevel(LogLevel.Trace); // todo: some command argument
+        .SetMinimumLevel(verbose ? LogLevel.Trace : LogLevel.Information);
 });
 ILogger logger = loggerFactory.CreateLogger<Program>();
 
 CancellationTokenSource programCancellationTokenSource = new();
-Console.CancelKeyPress += (sender, e) =>
+Console.CancelKeyPress += (_, e) =>
 {
     // Prevent the application from terminating immediately on CTRL + C
     e.Cancel = true;
@@ -23,14 +24,15 @@ Console.CancelKeyPress += (sender, e) =>
 DashCamConfiguration config = DashCamConfiguration.LoadOrCreate(logger);
 using DashCam cam = new DashCam(logger, config);
 
-DashCamController controller = config.ControllerType switch
-{
-    DashCamControllerType.Cli => new CliDashCamController(logger, cam),
-    DashCamControllerType.Gpio => new GpioDashCamController(logger, cam, config),
-    _ => throw new ArgumentOutOfRangeException()
-};
+List<DashCamController> controllers = [];
 
-logger.LogInformation("Running CrazyDashCam using {type}", controller.GetType().Name);
+if (config.UseCliController) controllers.Add(new CliDashCamController(logger, cam));
+if (config.UseGpioController) controllers.Add(new GpioDashCamController(logger, cam, config));
+
+foreach (var controller in controllers)
+{
+    logger.LogInformation("Using {type}", controller.GetType().Name);
+}
 
 try
 {
@@ -39,5 +41,9 @@ try
 catch (OperationCanceledException)
 {
     logger.LogInformation("Quitting...");
-    controller.Dispose();
+
+    foreach (var controller in controllers)
+    {
+        controller.Dispose();
+    }
 }

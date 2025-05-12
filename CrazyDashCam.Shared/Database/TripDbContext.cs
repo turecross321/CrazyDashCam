@@ -2,7 +2,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace CrazyDashCam.Shared.Database;
 
-public class TripDbContext : DbContext
+public sealed class TripDbContext : DbContext
 {
     public DbSet<DbAmbientAirTemperature> AmbientAirTemperatures { get; set; }
     public DbSet<DbCoolantTemperature> CoolantTemperatures { get; set; }
@@ -12,12 +12,15 @@ public class TripDbContext : DbContext
     public DbSet<DbRpm> Rpms { get; set; }
     public DbSet<DbSpeed> Speeds { get; set; }
     public DbSet<DbThrottlePosition> ThrottlePositions { get; set; }
+    public DbSet<DbHighlight> Highlights { get; set; }
     
     private string DbPath { get; }
 
     public TripDbContext(string folder)
     {
         DbPath = Path.Join(folder, "trip.db");
+        
+        this.Database.Migrate();
     }
     
     [Obsolete("Only meant for migrations")]
@@ -26,11 +29,6 @@ public class TripDbContext : DbContext
         var folder = Environment.SpecialFolder.LocalApplicationData;
         var path = Environment.GetFolderPath(folder);
         DbPath = System.IO.Path.Join(path, "trip.db");
-    }
-    
-    public void ApplyMigrations()
-    {
-        this.Database.Migrate(); // Apply any pending migrations automatically
     }
     
     protected override void OnConfiguring(DbContextOptionsBuilder options)

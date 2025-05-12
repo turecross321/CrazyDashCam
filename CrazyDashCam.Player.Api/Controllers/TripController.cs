@@ -91,7 +91,6 @@ public class TripController(TripStorageService tripStorage) : ControllerBase
         
         using WebSocket webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
         await using TripDbContext tripDb = new TripDbContext(trip.Path);
-        tripDb.ApplyMigrations();
         
         byte[] buffer = new byte[1024 * 4];
         
@@ -114,7 +113,7 @@ public class TripController(TripStorageService tripStorage) : ControllerBase
             if (clientRequest == null)
                 continue;
 
-            TripEventsResponse response = new TripEventsResponse
+            RealTimeTripEventsResponse response = new RealTimeTripEventsResponse
             {
                 AmbAirTemp = tripDb.AmbientAirTemperatures.FilterByTimestamp(clientRequest.From,
                     clientRequest.To),
@@ -133,7 +132,7 @@ public class TripController(TripStorageService tripStorage) : ControllerBase
                 ThrPos = tripDb.ThrottlePositions.FilterByTimestamp(clientRequest.From,
                     clientRequest.To),
                 From = clientRequest.From,
-                To = clientRequest.To,
+                To = clientRequest.To
             };
             
             // todo: do *some* security measure to make sure this isnt completely abused

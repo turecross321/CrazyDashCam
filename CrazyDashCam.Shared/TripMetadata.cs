@@ -6,5 +6,6 @@ public record TripMetadata
     public DateTimeOffset? EndDate { get; set; }
     public required string VehicleName { get; set; }
     public DateTimeOffset? AllVideosStartedDate { get; set; }
-    public TripMetadataVideo[]? Videos { get; set; }
+    public required List<TripMetadataVideo>? Videos { get; set; }
+    public int? TotalHighlights { get; set; }
 }

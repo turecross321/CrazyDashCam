@@ -5,28 +5,26 @@ using Microsoft.Extensions.Logging;
 
 namespace CrazyDashCam.Recorder;
 
-public class CameraRecorder : IDisposable
+public class CameraRecorder(
+    DashCam dashCam,
+    ILogger logger,
+    CameraConfiguration camera,
+    string videoEncoder,
+    string audioEncoder)
+    : IDisposable
 {
-    public CameraConfiguration Camera { get; }
+    public CameraConfiguration Camera { get; } = camera;
+    public bool Recording { get; private set; } = false;
     private Process? _process = null;
-    private readonly ILogger _logger;
-    private readonly DashCam _dashCam;
 
-    public CameraRecorder(DashCam dashCam, ILogger logger, CameraConfiguration camera, string videoEncoder, string audioEncoder)
-    {
-        _logger = logger;
-        Camera = camera;
-        _dashCam = dashCam;
-        VideoEncoder = videoEncoder;
-        AudioEncoder = audioEncoder;
-    }
-
-    private string VideoEncoder { get; }
-    private string AudioEncoder { get; }
+    private string VideoEncoder { get; } = videoEncoder;
+    private string AudioEncoder { get; } = audioEncoder;
     public DateTimeOffset? StartDate { get; private set; }
     public string? FileName { get; private set; }
 
-    private string GetVideoFormat()
+    private CancellationToken? _recordingCancellationToken;
+
+    private static string GetVideoFormat()
     {
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             return "v4l2";
@@ -38,7 +36,7 @@ public class CameraRecorder : IDisposable
         throw new Exception("Unsupported OS");
     }
     
-    private string GetAudioFormat()
+    private static string GetAudioFormat()
     {
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             return "alsa"; // Most common for Linux
@@ -50,14 +48,15 @@ public class CameraRecorder : IDisposable
         throw new Exception("Unsupported OS");
     }
 
-    private string GetFfmpegArguments(CameraConfiguration camera, string videoEncoder, string audioEncoder, string output)
+    private static string GetFfmpegArguments(CameraConfiguration camera, string videoEncoder, string audioEncoder, string output)
     {
         string arguments = "";
         string videoFormat = GetVideoFormat();
 
         arguments += $" -framerate {camera.Fps}" +
                      $" -f {videoFormat}" +
-                     $" -rtbufsize {camera.BufferSizeMb}M";
+                     $" -rtbufsize {camera.BufferSizeMb}M" +
+                     $" -video_size {camera.ResolutionWidth}x{camera.ResolutionHeight}";
 
         if (videoFormat == "dshow")
         {
@@ -80,19 +79,18 @@ public class CameraRecorder : IDisposable
 
         arguments +=
             $" -c:v {videoEncoder}" +
-            $" -fps_mode vfr" +
-            $" -video_size {camera.ResolutionWidth}x{camera.ResolutionHeight}" +
             $" -preset veryfast" +
             $" -b:v {camera.VideoBitrateKbps}k" +
-            $" -g 10";
+            $" -g 10" +
+            $" -fps_mode vfr";
 
         if (camera.RecordAudio)
-            arguments += $" -c:a aac" +
+            arguments += $" -c:a {audioEncoder}" +
                          $" -b:a {camera.AudioBitrateKbps}k";
 
         arguments +=
-            $" -movflags +faststart" +
             $" -vf format=yuv420p" +
+            $" -movflags +faststart" +
             $" -async 1" + // Ensure audio and video are in sync
             $" -threads {camera.Threads}" +
             $" -y" +
@@ -100,12 +98,13 @@ public class CameraRecorder : IDisposable
 
         return arguments;
     }
-    public void StartRecording(string directory, string fileName)
+    public void StartRecording(string directory, string fileName, CancellationToken cancellationToken)
     {
         string output = Path.Combine(directory, fileName);
-        _logger.LogInformation("Starting recording for {device} at {output}", Camera, output);
+        FileName = fileName;
+        logger.LogInformation("Starting recording for {device} at {output}", Camera, output);
         
-        var startInfo = new ProcessStartInfo
+        var startInfo = new ProcessStartInfo 
         {
             FileName = "ffmpeg",
             Arguments = GetFfmpegArguments(Camera, VideoEncoder, AudioEncoder, output),
@@ -115,7 +114,7 @@ public class CameraRecorder : IDisposable
             UseShellExecute = false,
             CreateNoWindow = true
         };
-
+        
         _process = Process.Start(startInfo);
         
         if (_process == null)
@@ -123,28 +122,38 @@ public class CameraRecorder : IDisposable
             throw new InvalidOperationException($"Failed to start recording with {Camera}. Is FFmpeg installed and added to PATH?");
         }
         
-        _process.ErrorDataReceived += ProcessOnErrorDataReceived;
-        
+        _process.ErrorDataReceived += ProcessOnDataReceived;
+        _process.OutputDataReceived += ProcessOnDataReceived;
+        _process.Exited += ProcessOnExited;
+
         _process.BeginOutputReadLine();
         _process.BeginErrorReadLine();
 
-        FileName = fileName;
+        _recordingCancellationToken = cancellationToken;
+        _recordingCancellationToken.Value.Register(StopRecording);
     }
-    public Task StopRecording()
+    
+    private void ProcessOnExited(object? sender, EventArgs e)
     {
+        logger.LogInformation("{camera} process exited", Camera.Label);
+    }
+
+    private void StopRecording()
+    {
+        Recording = false;
+        
         if (_process == null || _process.HasExited)
         {
-            _logger.LogWarning("Recording process is not running or has already exited.");
-            _dashCam.InvokeWarning();
-            return Task.CompletedTask;
+            logger.LogWarning("Recording process is not running or has already exited.");
+            dashCam.InvokeWarning();
         }
 
         try
         {
-            _logger.LogInformation("Stopping recording for {device}", Camera);
+            logger.LogInformation("Stopping recording for {device}", Camera);
 
             // Send a graceful termination signal
-            _process.StandardInput.WriteLine("q");
+            _process!.StandardInput.WriteLine("q");
             _process.StandardInput.Flush();
             
             // Wait for the process to exit
@@ -152,49 +161,47 @@ public class CameraRecorder : IDisposable
 
             if (!_process.HasExited)
             {
-                _logger.LogWarning("Recording process did not stop cleanly. Forcing termination...");
-                _dashCam.InvokeWarning();
+                logger.LogWarning("Recording process did not stop cleanly. Forcing termination...");
+                dashCam.InvokeWarning();
                 _process.Kill(); // Force termination if necessary
             }
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error stopping recording process for {device}", Camera);
+            logger.LogError(ex, "Error stopping recording process for {device}", Camera);
         }
         finally
         {
-            _process.Dispose();
+            _process?.Dispose();
             _process = null;
-            _dashCam.InvokeRecordingActivity(new RecordingEventArgs(Camera.Label, false));
+            dashCam.InvokeRecordingActivity(this);
             StartDate = null;
         }
-
-        return Task.CompletedTask;
     }
-
-
-    private void ProcessOnErrorDataReceived(object sender, DataReceivedEventArgs e)
+    
+    private void ProcessOnDataReceived(object sender, DataReceivedEventArgs e)
     {
         if (e.Data == null)
             return;
         
-        if (StartDate == null && e.Data.StartsWith("frame="))
+        if (!_recordingCancellationToken!.Value.IsCancellationRequested && !Recording && e.Data.StartsWith("frame="))
         {
+            Recording = true;
             StartDate = DateTimeOffset.Now;
-            _dashCam.InvokeRecordingActivity(new RecordingEventArgs(Camera.Label, true));
+            dashCam.InvokeRecordingActivity(this);
         }
         
         if (e.Data.Contains("Cannot open") || e.Data.Contains("Device or resource busy") || e.Data.Contains("error", StringComparison.InvariantCultureIgnoreCase))
         {
-            _logger.LogError("{data}", e.Data);
-            _dashCam.InvokeWarning();
+            logger.LogError("{data}", e.Data);
+            dashCam.InvokeWarning();
         }
         else
         {
-            _logger.LogDebug("{data}", e.Data);
+            logger.LogDebug("{data}", e.Data);
         }
     }
-
+    
     public void Dispose()
     {
         if (_process != null)

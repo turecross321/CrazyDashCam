@@ -7,7 +7,6 @@ using InTheHand.Net.Bluetooth;
 using InTheHand.Net.Sockets;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using OBD.NET.OBDData;
 
 namespace CrazyDashCam.Recorder;
 
@@ -25,10 +24,11 @@ public class DashCam : IDisposable
 
     private readonly ILogger _logger;
     private readonly DashCamConfiguration _configuration;
+    private CancellationTokenSource? _cancellationTokenSource;
 
     public event EventHandler<bool>? Warning; 
     public event EventHandler<bool>? ObdActivity; 
-    public event EventHandler<RecordingEventArgs>? RecordingActivity; 
+    public event EventHandler<CameraRecorder>? RecordingActivity; 
 
     public DashCam(ILogger logger, DashCamConfiguration configuration)
     {
@@ -86,6 +86,9 @@ public class DashCam : IDisposable
             case DbThrottlePosition throttlePosition:
                 _tripDbContext.ThrottlePositions.Add(throttlePosition);
                 break;
+            case DbHighlight highlight:
+                _tripDbContext.Highlights.Add(highlight);
+                break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(eventData), "Tried to add invalid database entry");
         }
@@ -101,7 +104,7 @@ public class DashCam : IDisposable
         File.WriteAllTextAsync(Path.Combine(_tripDirectory, "metadata.json"), metadataJson);
     }
     
-    public async void StartRecording(CancellationToken cancellationToken)
+    public async void StartRecording()
     {
         if (IsRecording())
         {
@@ -111,6 +114,7 @@ public class DashCam : IDisposable
         
         _logger.LogInformation("Starting recording");
         _recording = true;
+        _cancellationTokenSource = new CancellationTokenSource();
         
         DateTimeOffset start = DateTimeOffset.Now;
         string folderName = start.ToString("yyyy-MM-dd_HH-mm-ss");
@@ -118,18 +122,18 @@ public class DashCam : IDisposable
         Directory.CreateDirectory(_tripDirectory);
         
         _tripDbContext = new TripDbContext(_tripDirectory);
-        _tripDbContext.ApplyMigrations();
         
         foreach (var recorder in _recorders)
         {
             string fileName = $"{recorder.Camera.Label.ToValidFileName()}.mp4";
-            recorder.StartRecording(_tripDirectory, fileName);
+            recorder.StartRecording(_tripDirectory, fileName, _cancellationTokenSource.Token);
         }
         
         _tripMetadata = new TripMetadata
         {
             StartDate = start,
             VehicleName = _configuration.VehicleName,
+            Videos = [],
         };
         
         SaveMetadata();
@@ -142,7 +146,7 @@ public class DashCam : IDisposable
                     await ConnectToRfCommBluetoothDevice(_configuration.Obd2BluetoothAddress);
                 
                 _obdListener = new ObdListener(_logger, this, _configuration.ObdSerialPort);
-                _obdListener.StartListening(cancellationToken);
+                _obdListener.StartListening(_cancellationTokenSource.Token);
             }
             catch (Exception e)
             {
@@ -151,55 +155,48 @@ public class DashCam : IDisposable
             }
         }
         
-        cancellationToken.Register(StopRecording);
-        
         _logger.LogInformation("Started recording");
     }
 
-    private async void StopRecording()
+    public async void StopRecording()
     {
+        if (!IsRecording())
+        {
+            _logger.LogWarning("Attempted to stop recording while one wasn't active");
+            return;
+        }
+        
         _logger.LogInformation("Stopping recording");
         _recording = false;
+        await _cancellationTokenSource!.CancelAsync();
+        await _tripDbContext!.SaveChangesAsync();
         
         DateTimeOffset end = DateTimeOffset.Now;
         Debug.Assert(_tripMetadata != null, nameof(_tripMetadata) + " != null");
         _tripMetadata.EndDate = end;
-        List<TripMetadataVideo> metadataVideos = new List<TripMetadataVideo>();
-
-        DateTimeOffset? lastStartDate = null;
-        foreach (CameraRecorder recorder in _recorders)
-        {
-            if (lastStartDate == null || recorder.StartDate > lastStartDate)
-                lastStartDate = recorder.StartDate;
-            
-            metadataVideos.Add(new TripMetadataVideo(recorder.Camera.Label, 
-                recorder.FileName!, recorder.StartDate, recorder.Camera.MuteAutomaticallyOnPlayback));
-            
-            await recorder.StopRecording();
-        }
-
-        _tripMetadata.AllVideosStartedDate = lastStartDate;
-        _tripMetadata.Videos = metadataVideos.ToArray();
+        _tripMetadata.TotalHighlights = _tripDbContext?.Highlights.Count();
         
         SaveMetadata();
         
         _obdListener?.Dispose();
-
-        if (_tripDbContext != null)
-        {
-            await _tripDbContext.SaveChangesAsync();
-            await _tripDbContext.Database.CloseConnectionAsync();
-            await _tripDbContext.DisposeAsync();
-        }
-        else
-        {
-            _logger.LogError("_tripDbContext is null?");
-        }
+        await _tripDbContext!.Database.CloseConnectionAsync();
+        await _tripDbContext!.DisposeAsync();
         
         _tripMetadata = null;
         _tripDirectory = null;
         
         _logger.LogInformation("Stopped recording");
+    }
+
+    private void AddRecorderToMetadata(CameraRecorder recorder)
+    {
+        _tripMetadata!.Videos?.Add(new TripMetadataVideo(recorder.Camera.Label, 
+            recorder.FileName!, recorder.StartDate, recorder.Camera.MuteAutomaticallyOnPlayback));
+
+        if (_tripMetadata!.Videos?.Count == _recorders.Count) 
+            _tripMetadata.AllVideosStartedDate = _tripMetadata.Videos.MaxBy(t => t.StartDate)?.StartDate;
+        
+        SaveMetadata();
     }
 
     /// <summary>
@@ -213,9 +210,14 @@ public class DashCam : IDisposable
     /// <summary>
     /// Signal to listeners about video recording updates
     /// </summary>
-    public void InvokeRecordingActivity(RecordingEventArgs args)
+    public void InvokeRecordingActivity(CameraRecorder recorder)
     {
-        RecordingActivity?.Invoke(this, args);
+        RecordingActivity?.Invoke(this, recorder);
+
+        // If the recorder is recording and hasn't been added to the metadata, add it.
+        if (recorder.Recording && 
+            _tripMetadata!.Videos!.FirstOrDefault(v => v.Label == recorder.Camera.Label) == null)
+            AddRecorderToMetadata(recorder);
     }
     
     /// <summary>

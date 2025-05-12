@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging;
 
 namespace CrazyDashCam.Recorder.Controllers;
 
-public class GpioDashCamController : DashCamController
+public class GpioDashCamController : DashCamController, IDisposable
 {
     private readonly GpioController _gpioController;
     private readonly DashCamConfiguration _configuration;
@@ -35,10 +35,13 @@ public class GpioDashCamController : DashCamController
         
         _gpioController.OpenPin(_configuration.GpioPins.StopRecordingButtonPin, PinMode.InputPullUp);
         _gpioController.RegisterCallbackForPinValueChangedEvent(_configuration.GpioPins.StopRecordingButtonPin, PinEventTypes.Falling, OnStopRecording);
+
+        _gpioController.OpenPin(_configuration.GpioPins.AddHighlightPin, PinMode.InputPullUp);
+        _gpioController.RegisterCallbackForPinValueChangedEvent(_configuration.GpioPins.StopRecordingButtonPin, PinEventTypes.Falling, OnAddHighlight);
         
         _gpioController.Write(_configuration.GpioPins.RunningLedPin, true);
     }
-
+    
     private void WriteAllLeds(bool value)
     {
         Logger.LogInformation("Writing all LEDs {value}", value);
@@ -54,10 +57,10 @@ public class GpioDashCamController : DashCamController
     }
 
 
-    protected override void CamOnRecordingActivity(object? sender, RecordingEventArgs recordingEventArgs)
+    protected override void CamOnRecordingActivity(object? sender, CameraRecorder recorder)
     {
-        int gpioPin = _cameraGpioNumbers[recordingEventArgs.Label];
-        _gpioController.Write(gpioPin, recordingEventArgs.Recording);
+        int gpioPin = _cameraGpioNumbers[recorder.Camera.Label];
+        _gpioController.Write(gpioPin, recorder.Recording);
     }
 
     protected override void CamOnObdActivity(object? sender, bool value)
@@ -80,7 +83,13 @@ public class GpioDashCamController : DashCamController
         StartRecording();
     }
 
-    public new void Dispose()
+    private void OnAddHighlight(object sender, PinValueChangedEventArgs pinValueChangedEventArgs)
+    {
+        AddHighlight();
+    }
+
+    
+    public override void Dispose()
     {
         Logger.LogInformation("Disposing " + nameof(GpioDashCamController));
 
@@ -93,6 +102,6 @@ public class GpioDashCamController : DashCamController
         
         _gpioController.Dispose();
         
-        base.Dispose();
+        GC.SuppressFinalize(this);
     }
 }

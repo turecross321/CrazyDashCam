@@ -1,4 +1,5 @@
 ﻿using CrazyDashCam.Shared;
+using CrazyDashCam.Shared.Database;
 
 namespace CrazyDashCam.PlayerAPI.Models;
 

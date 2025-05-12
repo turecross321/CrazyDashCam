@@ -52,13 +52,13 @@ public class ObdListener : IDisposable
         {
             try
             {
-                SerialConnection con = new SerialConnection(port);
+                SerialConnection con = new(port);
                 con.Connect();
                 result = port;
             }
-            catch (Exception e)
+            catch (Exception)
             {
-                continue;
+                // ignored
             }
         }
 
