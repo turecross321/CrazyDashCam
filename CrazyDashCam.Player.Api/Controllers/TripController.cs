@@ -44,7 +44,7 @@ public class TripController(TripStorageService tripStorage) : ControllerBase
         if (video == null)
             return NotFound();
         
-        string path = Path.Join(trip.Path, video.FileName);
+        string path = Path.Join(trip.Path, video.VideoFileName);
         
         if (!System.IO.File.Exists(path))
             return NotFound();
@@ -64,13 +64,33 @@ public class TripController(TripStorageService tripStorage) : ControllerBase
         if (video == null)
             return NotFound();
         
-        string path = Path.Join(trip.Path, video.FileName);
+        string path = Path.Join(trip.Path, video.VideoFileName);
         
         if (!System.IO.File.Exists(path))
             return NotFound();
         
         byte[] fileBytes = await System.IO.File.ReadAllBytesAsync(path);
-        return File(fileBytes, "application/octet-stream", video.FileName);
+        return File(fileBytes, "application/octet-stream", video.VideoFileName);
+    }
+    
+    [HttpGet("/trips/{directoryName}/thumbnails/{videoLabel}")]
+    public async Task<IActionResult> DownloadTripThumbnail([FromRoute] string directoryName, [FromRoute] string videoLabel)
+    {
+        StoredTrip? trip = await tripStorage.GetTrip(directoryName);
+        if (trip == null)
+            return NotFound();
+        
+        TripMetadataVideo? video = trip.MetaData.Videos.FirstOrDefault(v => v.Label == videoLabel);
+        if (video == null)
+            return NotFound();
+        
+        string path = Path.Join(trip.Path, video.ThumbnailFileName);
+        
+        if (!System.IO.File.Exists(path))
+            return NotFound();
+        
+        byte[] fileBytes = await System.IO.File.ReadAllBytesAsync(path);
+        return File(fileBytes, "image/jpeg", video.VideoFileName);
     }
     
     [HttpGet("/trips/{directoryName}/events")]

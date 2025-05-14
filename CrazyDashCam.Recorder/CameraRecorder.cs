@@ -8,19 +8,21 @@ namespace CrazyDashCam.Recorder;
 public class CameraRecorder(
     DashCam dashCam,
     ILogger logger,
-    CameraConfiguration camera,
+    CameraConfiguration cameraConfig,
     string videoEncoder,
     string audioEncoder)
     : IDisposable
 {
-    public CameraConfiguration Camera { get; } = camera;
+    public CameraConfiguration CameraConfig { get; } = cameraConfig;
     public bool Recording { get; private set; } = false;
     private Process? _process = null;
 
     private string VideoEncoder { get; } = videoEncoder;
     private string AudioEncoder { get; } = audioEncoder;
     public DateTimeOffset? StartDate { get; private set; }
-    public string? FileName { get; private set; }
+    public string VideoFileName => CameraConfig.Label.ToValidFileName() + ".mp4";
+    public string ThumbnailFileName => CameraConfig.Label.ToValidFileName() + ".jpg";
+    public string? CurrentTripDirectory { get; private set; }
 
     private CancellationToken? _recordingCancellationToken;
 
@@ -98,16 +100,16 @@ public class CameraRecorder(
 
         return arguments;
     }
-    public void StartRecording(string directory, string fileName, CancellationToken cancellationToken)
+    public void StartRecording(string directory, CancellationToken cancellationToken)
     {
-        string output = Path.Combine(directory, fileName);
-        FileName = fileName;
-        logger.LogInformation("Starting recording for {device} at {output}", Camera, output);
+        CurrentTripDirectory = directory;
+        string output = Path.Combine(directory, VideoFileName);
+        logger.LogInformation("Starting recording for {device} at {output}", CameraConfig, output);
         
         var startInfo = new ProcessStartInfo 
         {
             FileName = "ffmpeg",
-            Arguments = GetFfmpegArguments(Camera, VideoEncoder, AudioEncoder, output),
+            Arguments = GetFfmpegArguments(CameraConfig, VideoEncoder, AudioEncoder, output),
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             RedirectStandardInput = true,
@@ -119,7 +121,7 @@ public class CameraRecorder(
         
         if (_process == null)
         {
-            throw new InvalidOperationException($"Failed to start recording with {Camera}. Is FFmpeg installed and added to PATH?");
+            throw new InvalidOperationException($"Failed to start recording with {CameraConfig}. Is FFmpeg installed and added to PATH?");
         }
         
         _process.ErrorDataReceived += ProcessOnDataReceived;
@@ -133,9 +135,49 @@ public class CameraRecorder(
         _recordingCancellationToken.Value.Register(StopRecording);
     }
     
-    private void ProcessOnExited(object? sender, EventArgs e)
+    private void SaveThumbnail()
     {
-        logger.LogInformation("{camera} process exited", Camera.Label);
+        if (CurrentTripDirectory == null)
+        {
+            logger.LogWarning("Attempted to save thumbnail when current trip directory is null. Aborting...");
+            return;
+        }
+        
+        string thumbnailPath = Path.Combine(CurrentTripDirectory, ThumbnailFileName);
+        string videoPath = Path.Combine(CurrentTripDirectory, VideoFileName);
+
+        if (!File.Exists(videoPath))
+        {
+            logger.LogWarning("Cannot save thumbnail: Video file not found at {path}", videoPath);
+            return;
+        }
+
+        var startInfo = new ProcessStartInfo
+        {
+            FileName = "ffmpeg",
+            Arguments = $"-i \"{videoPath}\" -ss 00:00:01 -vframes 1 -q:v 2 \"{thumbnailPath}\" -y",
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+            CreateNoWindow = true
+        };
+
+        using Process process = new();
+        process.StartInfo = startInfo;
+        process.Start();
+
+        string stderr = process.StandardError.ReadToEnd();
+        process.WaitForExit();
+
+        if (process.ExitCode == 0 && File.Exists(thumbnailPath))
+        {
+            logger.LogInformation("Thumbnail saved successfully at {path}", thumbnailPath);
+        }
+        else
+        {
+            logger.LogError("Failed to generate thumbnail for {file}. FFmpeg error: {error}", VideoFileName, stderr);
+            dashCam.InvokeWarning();
+        }
     }
 
     private void StopRecording()
@@ -150,7 +192,7 @@ public class CameraRecorder(
 
         try
         {
-            logger.LogInformation("Stopping recording for {device}", Camera);
+            logger.LogInformation("Stopping recording for {device}", CameraConfig);
 
             // Send a graceful termination signal
             _process!.StandardInput.WriteLine("q");
@@ -168,15 +210,22 @@ public class CameraRecorder(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error stopping recording process for {device}", Camera);
+            logger.LogError(ex, "Error stopping recording process for {device}", CameraConfig);
         }
         finally
         {
             _process?.Dispose();
             _process = null;
             dashCam.InvokeRecordingActivity(this);
+            SaveThumbnail();
             StartDate = null;
+            CurrentTripDirectory = null;
         }
+    }
+    
+    private void ProcessOnExited(object? sender, EventArgs e)
+    {
+        logger.LogInformation("{camera} process exited", CameraConfig.Label);
     }
     
     private void ProcessOnDataReceived(object sender, DataReceivedEventArgs e)

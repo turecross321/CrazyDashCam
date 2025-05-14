@@ -52,7 +52,7 @@ public class CliDashCamController : DashCamController, IDisposable
 
     protected override void CamOnRecordingActivity(object? sender, CameraRecorder recorder)
     {
-        Console.WriteLine($"[RECORDING]: {recorder.Camera.Label}={recorder.Recording}");
+        Console.WriteLine($"[RECORDING]: {recorder.CameraConfig.Label}={recorder.Recording}");
         
         base.CamOnRecordingActivity(sender, recorder);
     }

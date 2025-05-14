@@ -131,8 +131,7 @@ public class DashCam : IDisposable
         
         foreach (var recorder in _recorders)
         {
-            string fileName = $"{recorder.Camera.Label.ToValidFileName()}.mp4";
-            recorder.StartRecording(_tripDirectory, fileName, _cancellationTokenSource.Token);
+            recorder.StartRecording(_tripDirectory, _cancellationTokenSource.Token);
         }
         
         _tripMetadata = new TripMetadata
@@ -195,8 +194,8 @@ public class DashCam : IDisposable
 
     private void AddRecorderToMetadata(CameraRecorder recorder)
     {
-        _tripMetadata!.Videos?.Add(new TripMetadataVideo(recorder.Camera.Label, 
-            recorder.FileName!, recorder.StartDate, recorder.Camera.MuteAutomaticallyOnPlayback));
+        _tripMetadata!.Videos?.Add(new TripMetadataVideo(recorder.CameraConfig.Label, 
+            recorder.VideoFileName, recorder.ThumbnailFileName, recorder.StartDate, recorder.CameraConfig.MuteAutomaticallyOnPlayback));
 
         if (_tripMetadata!.Videos?.Count == _recorders.Count) 
             _tripMetadata.AllVideosStartedDate = _tripMetadata.Videos.MaxBy(t => t.StartDate)?.StartDate;
@@ -221,7 +220,7 @@ public class DashCam : IDisposable
 
         // If the recorder is recording and hasn't been added to the metadata, add it.
         if (recorder.Recording && 
-            _tripMetadata!.Videos!.FirstOrDefault(v => v.Label == recorder.Camera.Label) == null)
+            _tripMetadata!.Videos!.FirstOrDefault(v => v.Label == recorder.CameraConfig.Label) == null)
             AddRecorderToMetadata(recorder);
     }
     
