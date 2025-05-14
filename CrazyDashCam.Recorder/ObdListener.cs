@@ -112,7 +112,7 @@ public class ObdListener : IDisposable
             _ => throw new ArgumentNullException(nameof(args))
         };
 
-        _dashCam.AddTripData(dbEvent);
+        _dashCam.AddTripDbData(dbEvent);
     }
 
     public void Dispose()

@@ -56,7 +56,7 @@ public class DashCam : IDisposable
         return Task.CompletedTask;
     }
     
-    public void AddTripData(IHasTimestamp eventData)
+    public void AddTripDbData(IHasTimestamp eventData)
     {
         if (_tripDbContext == null)
         {
@@ -86,14 +86,20 @@ public class DashCam : IDisposable
             case DbThrottlePosition throttlePosition:
                 _tripDbContext.ThrottlePositions.Add(throttlePosition);
                 break;
-            case DbHighlight highlight:
-                _tripDbContext.Highlights.Add(highlight);
-                break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(eventData), "Tried to add invalid database entry");
         }
     }
 
+    public void AddHighlight(TripHighlight highlight)
+    {
+        if (_tripMetadata == null)
+            return;
+        
+        _logger.LogInformation("Adding highlight");
+        _tripMetadata.Highlights!.Add(highlight);
+    }
+    
     private void SaveMetadata()
     {
         _logger.LogInformation("Saving metadata");
@@ -134,6 +140,7 @@ public class DashCam : IDisposable
             StartDate = start,
             VehicleName = _configuration.VehicleName,
             Videos = [],
+            Highlights = [],
         };
         
         SaveMetadata();
@@ -174,8 +181,6 @@ public class DashCam : IDisposable
         DateTimeOffset end = DateTimeOffset.Now;
         Debug.Assert(_tripMetadata != null, nameof(_tripMetadata) + " != null");
         _tripMetadata.EndDate = end;
-        _tripMetadata.TotalHighlights = _tripDbContext?.Highlights.Count();
-        
         SaveMetadata();
         
         _obdListener?.Dispose();

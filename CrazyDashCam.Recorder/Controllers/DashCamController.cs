@@ -1,4 +1,5 @@
-﻿using CrazyDashCam.Shared.Database;
+﻿using CrazyDashCam.Shared;
+using CrazyDashCam.Shared.Database;
 using Microsoft.Extensions.Logging;
 
 namespace CrazyDashCam.Recorder.Controllers;
@@ -54,9 +55,7 @@ public abstract class DashCamController : IDisposable
         if (!_cam.IsRecording())
             return;
         
-        Logger.LogInformation("Adding highlight");
-        
-        _cam.AddTripData(new DbHighlight
+        _cam.AddHighlight(new TripHighlight
         {
             Date = DateTimeOffset.Now
         });

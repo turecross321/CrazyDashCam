@@ -12,7 +12,6 @@ public sealed class TripDbContext : DbContext
     public DbSet<DbRpm> Rpms { get; set; }
     public DbSet<DbSpeed> Speeds { get; set; }
     public DbSet<DbThrottlePosition> ThrottlePositions { get; set; }
-    public DbSet<DbHighlight> Highlights { get; set; }
     
     private string DbPath { get; }
 
