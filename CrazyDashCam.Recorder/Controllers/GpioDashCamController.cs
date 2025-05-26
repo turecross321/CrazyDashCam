@@ -37,7 +37,7 @@ public class GpioDashCamController : DashCamController, IDisposable
         _gpioController.RegisterCallbackForPinValueChangedEvent(_configuration.GpioPins.StopRecordingButtonPin, PinEventTypes.Falling, OnStopRecording);
 
         _gpioController.OpenPin(_configuration.GpioPins.AddHighlightPin, PinMode.InputPullUp);
-        _gpioController.RegisterCallbackForPinValueChangedEvent(_configuration.GpioPins.StopRecordingButtonPin, PinEventTypes.Falling, OnAddHighlight);
+        _gpioController.RegisterCallbackForPinValueChangedEvent(_configuration.GpioPins.AddHighlightPin, PinEventTypes.Falling, OnAddHighlight);
         
         _gpioController.Write(_configuration.GpioPins.RunningLedPin, true);
     }
